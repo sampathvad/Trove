@@ -4,7 +4,7 @@ import AppKit
 
 struct SettingsView: View {
     private enum Tab: String, CaseIterable {
-        case general, clipboard, hotkeys, appearance, privacy, snippets, filters, ai, advanced
+        case general, clipboard, hotkeys, appearance, privacy, snippets, filters, advanced
         var displayName: String { rawValue.capitalized }
         var icon: String {
             switch self {
@@ -15,7 +15,6 @@ struct SettingsView: View {
             case .privacy: return "lock.shield"
             case .snippets: return "text.badge.plus"
             case .filters: return "wand.and.stars"
-            case .ai: return "sparkles"
             case .advanced: return "wrench.and.screwdriver"
             }
         }
@@ -44,7 +43,6 @@ struct SettingsView: View {
         case .privacy:    PrivacySettingsView()
         case .snippets:   SnippetsSettingsView()
         case .filters:    FiltersSettingsView()
-        case .ai:         AISettingsView()
         case .advanced:   AdvancedSettingsView()
         }
     }
