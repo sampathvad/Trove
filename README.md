@@ -1,4 +1,4 @@
-# Trove — collecting, recalling, protecting
+# Trove — Every copy, kept.
 
 Trove is a free, open-source macOS clipboard manager. It silently captures everything you copy and gives you instant access to your full history via a lightweight floating panel (⌘⇧V). Search, filter, pin, and paste — all keyboard-driven, all local.
 
@@ -28,12 +28,17 @@ Head to [**Releases**](../../releases/latest) and download **Trove.dmg**.
 - Filter by type: Text, Links, Images, Code, Colors, Files
 - Pin important clips, organize into Collections
 - Text expansion Snippets
-- Optional AI actions (bring your own OpenAI key)
-- 100% local storage — no account, no cloud required
+- 100% local storage — no account, no cloud, no signup
+
+## Settings
+
+Access settings via the menu bar icon → **Settings…** or press **⌘,** while Trove is active.
+
+Tabs: General, Clipboard, Hotkeys, Appearance, Privacy, Snippets, Filters, Advanced.
 
 ## Requirements
 
-- macOS 13 Ventura or later
+- macOS 14 Ventura or later
 - Apple Silicon or Intel Mac
 
 ## Build from Source
