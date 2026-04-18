@@ -16,22 +16,6 @@ struct TroveApp: App {
     }
 }
 
-// Captures SwiftUI's openSettings action so AppKit code can call it.
-private struct SettingsActionBridge: View {
-    @Environment(\.openSettings) private var openSettings
-    var body: some View {
-        Color.clear.onAppear {
-            SettingsActionStore.shared.open = { openSettings() }
-        }
-    }
-}
-
-@MainActor
-final class SettingsActionStore {
-    static let shared = SettingsActionStore()
-    var open: (() -> Void)?
-}
-
 extension Notification.Name {
     static let openTroveSettings = Notification.Name("openTroveSettings")
 }
@@ -40,18 +24,9 @@ extension Notification.Name {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController?
     private var clipboardMonitor: ClipboardMonitor?
-    private var settingsBridgeWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-
-        // Host SettingsActionBridge in a hidden window so openSettings is
-        // captured at launch, before the Settings scene has ever been opened.
-        let win = NSWindow(contentRect: .zero, styleMask: [], backing: .buffered, defer: true)
-        win.contentViewController = NSHostingController(rootView: SettingsActionBridge())
-        win.setFrameOrigin(NSPoint(x: -9999, y: -9999))
-        win.orderFront(nil)
-        settingsBridgeWindow = win
 
         Task {
             await ClipStore.shared.setup()
