@@ -166,7 +166,7 @@ struct HotkeySettingsView: View {
 
     private func reregister() {
         HotkeyService.shared.register(id: "openPanel", keyCode: keyCode, modifiers: modifiers) {
-            PanelController.shared.toggle()
+            Task { @MainActor in PanelController.shared.toggle() }
         }
     }
 }

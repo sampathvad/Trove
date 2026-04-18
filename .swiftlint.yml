@@ -1,6 +1,8 @@
 disabled_rules:
   - trailing_whitespace
   - todo
+  - identifier_name
+  - for_where
 opt_in_rules:
   - empty_count
   - sorted_first_last

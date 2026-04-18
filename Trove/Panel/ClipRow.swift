@@ -116,10 +116,10 @@ struct ClipRow: View {
     @ViewBuilder
     private var contextMenu: some View {
         Button("Paste") {
-            PanelController.shared.closeAndPaste(clip)
+            Task { @MainActor in PanelController.shared.closeAndPaste(clip) }
         }
         Button("Paste as plain text") {
-            PanelController.shared.closeAndPaste(clip, asPlainText: true)
+            Task { @MainActor in PanelController.shared.closeAndPaste(clip, asPlainText: true) }
         }
         Divider()
         Button(clip.isPinned ? "Unpin" : "Pin") {
@@ -152,7 +152,7 @@ struct ClipRow: View {
 
         Divider()
         Button("Delete", role: .destructive) {
-            _ = ClipStore.shared.softDelete(clip)
+            Task { @MainActor in _ = ClipStore.shared.softDelete(clip) }
         }
     }
 
