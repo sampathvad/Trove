@@ -9,10 +9,8 @@ struct TroveApp: App {
         Settings { SettingsView() }
             .commands {
                 CommandGroup(replacing: .appSettings) {
-                    Button("Settings…") {
-                        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-                    }
-                    .keyboardShortcut(",", modifiers: .command)
+                    SettingsLink()
+                        .keyboardShortcut(",", modifiers: .command)
                 }
             }
     }
@@ -29,14 +27,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-
-        NotificationCenter.default.addObserver(
-            forName: .openTroveSettings,
-            object: nil,
-            queue: .main
-        ) { _ in
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-        }
 
         Task {
             await ClipStore.shared.setup()
