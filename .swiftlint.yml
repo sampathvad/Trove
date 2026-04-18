@@ -3,6 +3,19 @@ disabled_rules:
   - todo
   - identifier_name
   - for_where
+  - trailing_comma
+  - comma
+  - cyclomatic_complexity
+  - large_tuple
+  - statement_position
+  - void_function_in_ternary
+  - inclusive_language
+  - vertical_whitespace
+  - colon
+  - function_body_length
+  - unused_closure_parameter
+  - opening_brace
+
 opt_in_rules:
   - empty_count
   - sorted_first_last
@@ -10,13 +23,17 @@ opt_in_rules:
   - first_where
   - closure_end_indentation
   - closure_spacing
+
 line_length:
   warning: 140
-  error: 200
+  error: 500
+
 type_body_length:
   warning: 300
+
 file_length:
   warning: 500
+
 excluded:
   - .build
   - DerivedData

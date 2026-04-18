@@ -10,7 +10,7 @@ struct TroveApp: App {
             .commands {
                 CommandGroup(replacing: .appSettings) {
                     Button("Settings…") {
-                        NotificationCenter.default.post(name: .openTroveSettings, object: nil)
+                        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
                     }
                     .keyboardShortcut(",", modifiers: .command)
                 }
@@ -22,28 +22,21 @@ extension Notification.Name {
     static let openTroveSettings = Notification.Name("openTroveSettings")
 }
 
-@available(macOS 14.0, *)
-struct SettingsOpener: View {
-    @Environment(\.openSettings) private var openSettings
-
-    var body: some View {
-        Color.clear
-            .onReceive(NotificationCenter.default.publisher(for: .openTroveSettings)) { _ in
-                openSettings()
-            }
-    }
-}
-
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController?
     private var clipboardMonitor: ClipboardMonitor?
-    private var settingsOpenerWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
-        setupSettingsOpener()
+        NotificationCenter.default.addObserver(
+            forName: .openTroveSettings,
+            object: nil,
+            queue: .main
+        ) { _ in
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        }
 
         Task {
             await ClipStore.shared.setup()
@@ -63,29 +56,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             PasteService.requestAccessibilityIfNeeded()
-        }
-    }
-
-    private func setupSettingsOpener() {
-        if #available(macOS 14.0, *) {
-            let win = NSWindow(
-                contentRect: .zero,
-                styleMask: [],
-                backing: .buffered,
-                defer: true
-            )
-            win.contentViewController = NSHostingController(rootView: SettingsOpener())
-            win.setFrameOrigin(NSPoint(x: -9999, y: -9999))
-            win.orderFront(nil)
-            settingsOpenerWindow = win
-        } else {
-            NotificationCenter.default.addObserver(
-                forName: .openTroveSettings,
-                object: nil,
-                queue: .main
-            ) { _ in
-                NSApp.sendAction(Selector(("showPreferencesWindow:")), to: nil, from: nil)
-            }
         }
     }
 
