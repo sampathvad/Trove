@@ -119,7 +119,7 @@ final class MenuBarController {
     @objc private func openSettings() {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
-        SettingsActionStore.shared.open?()
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 
     @objc private func clearHistory() {
