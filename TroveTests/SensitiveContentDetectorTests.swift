@@ -21,7 +21,7 @@ final class SensitiveContentDetectorTests: XCTestCase {
     func testAWSKey()       { XCTAssertTrue(SensitiveContentDetector.matchesAPIKey("AKIAIOSFODNN7EXAMPLE")) }
     func testStripeSecret() { XCTAssertTrue(SensitiveContentDetector.matchesAPIKey("sk_live_abcdef1234567890")) }
     func testStripeTest()   { XCTAssertTrue(SensitiveContentDetector.matchesAPIKey("sk_test_abcdef1234567890")) }
-    func testGoogleKey()    { XCTAssertTrue(SensitiveContentDetector.matchesAPIKey("AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI")) }
+    func testGoogleKey()    { XCTAssertTrue(SensitiveContentDetector.matchesAPIKey("AIzaFAKEKEY_FOR_TESTING_PURPOSES_ONLY__")) }
     func testNormalText()   { XCTAssertFalse(SensitiveContentDetector.matchesAPIKey("Hello world")) }
     func testURL()          { XCTAssertFalse(SensitiveContentDetector.matchesAPIKey("https://example.com")) }
 
