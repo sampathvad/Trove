@@ -6,7 +6,7 @@ struct TroveApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        Settings { SettingsView() }
+        Settings { SettingsView().background(SettingsActionBridge()) }
             .commands {
                 CommandGroup(replacing: .appSettings) {
                     SettingsLink()
@@ -14,6 +14,22 @@ struct TroveApp: App {
                 }
             }
     }
+}
+
+// Captures SwiftUI's openSettings action so AppKit code can call it.
+private struct SettingsActionBridge: View {
+    @Environment(\.openSettings) private var openSettings
+    var body: some View {
+        Color.clear.onAppear {
+            SettingsActionStore.shared.open = { openSettings() }
+        }
+    }
+}
+
+@MainActor
+final class SettingsActionStore {
+    static let shared = SettingsActionStore()
+    var open: (() -> Void)?
 }
 
 extension Notification.Name {
