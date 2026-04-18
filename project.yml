@@ -1,0 +1,85 @@
+name: Trove
+options:
+  bundleIdPrefix: app.trove
+  deploymentTarget:
+    macOS: "13.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    PRODUCT_BUNDLE_IDENTIFIER: app.trove.Trove
+    DEVELOPMENT_TEAM: ""  # fill in your team ID
+
+targets:
+  Trove:
+    type: application
+    platform: macOS
+    sources:
+      - path: Trove
+    settings:
+      base:
+        INFOPLIST_FILE: Trove/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Trove/Resources/Trove.entitlements
+        PRODUCT_NAME: Trove
+    dependencies:
+      - package: GRDB
+      - package: KeyboardShortcuts
+      - package: Defaults
+      - package: Sparkle
+
+  TroveKit:
+    type: framework
+    platform: macOS
+    sources:
+      - path: TroveKit
+    dependencies:
+      - package: GRDB
+
+  TroveTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: TroveTests
+    dependencies:
+      - target: TroveKit
+
+  TroveUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: TroveUITests
+    dependencies:
+      - target: Trove
+
+packages:
+  GRDB:
+    url: https://github.com/groue/GRDB.swift.git
+    from: "6.0.0"
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts.git
+    from: "2.0.0"
+  Defaults:
+    url: https://github.com/sindresorhus/Defaults.git
+    from: "8.0.0"
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle.git
+    from: "2.0.0"
+
+schemes:
+  Trove:
+    build:
+      targets:
+        Trove: all
+    run:
+      config: Debug
+    test:
+      targets:
+        - TroveTests
+        - TroveUITests
+    archive:
+      config: Release
