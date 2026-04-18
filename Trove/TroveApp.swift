@@ -6,7 +6,7 @@ struct TroveApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        Settings { SettingsView().background(SettingsActionBridge()) }
+        Settings { SettingsView() }
             .commands {
                 CommandGroup(replacing: .appSettings) {
                     SettingsLink()
@@ -40,9 +40,18 @@ extension Notification.Name {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var menuBarController: MenuBarController?
     private var clipboardMonitor: ClipboardMonitor?
+    private var settingsBridgeWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+
+        // Host SettingsActionBridge in a hidden window so openSettings is
+        // captured at launch, before the Settings scene has ever been opened.
+        let win = NSWindow(contentRect: .zero, styleMask: [], backing: .buffered, defer: true)
+        win.contentViewController = NSHostingController(rootView: SettingsActionBridge())
+        win.setFrameOrigin(NSPoint(x: -9999, y: -9999))
+        win.orderFront(nil)
+        settingsBridgeWindow = win
 
         Task {
             await ClipStore.shared.setup()
