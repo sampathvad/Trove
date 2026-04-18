@@ -1,4 +1,4 @@
-# Trove — Every copy, kept.
+# Trove — collecting, recalling, protecting
 
 Trove is a free, open-source macOS clipboard manager. It silently captures everything you copy and gives you instant access to your full history via a lightweight floating panel (⌘⇧V). Search, filter, pin, and paste — all keyboard-driven, all local.
 
