@@ -4,10 +4,10 @@ import XCTest
 final class SQLiteDBTests: XCTestCase {
     var db: SQLiteDB!
 
-    override func setUp() {
-        super.setUp()
-        db = try! SQLiteDB(path: ":memory:")
-        try! db.exec("CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT, value REAL, data BLOB)")
+    override func setUp() throws {
+        try super.setUp()
+        db = try SQLiteDB(path: ":memory:")
+        try db.exec("CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT, value REAL, data BLOB)")
     }
 
     func testInsertAndQuery() throws {
@@ -77,4 +77,3 @@ final class SQLiteDBTests: XCTestCase {
         XCTAssertFalse(check.isEmpty)
     }
 }
-
