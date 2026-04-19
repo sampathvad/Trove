@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import ServiceManagement
 
 @main
 struct TroveApp: App {
@@ -43,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SnippetExpander.shared.start()
         observeScreenLock()
         showFirstRunIfNeeded()
+        syncLaunchAtLogin()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             PasteService.requestAccessibilityIfNeeded()
@@ -74,5 +76,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !TroveSettings.hasShownFirstRun else { return }
         menuBarController?.showFirstRunPopover()
         TroveSettings.hasShownFirstRun = true
+    }
+
+    private func syncLaunchAtLogin() {
+        let service = SMAppService.mainApp
+        if TroveSettings.launchAtLogin {
+            if service.status != .enabled {
+                try? service.register()
+            }
+        } else {
+            if service.status == .enabled {
+                try? service.unregister()
+            }
+        }
     }
 }
