@@ -4,8 +4,8 @@ import XCTest
 final class SQLiteDBTests: XCTestCase {
     var db: SQLiteDB!
 
-    override func setUp() throws {
-        try super.setUp()
+    override func setUpWithError() throws {
+        try super.setUpWithError()
         db = try SQLiteDB(path: ":memory:")
         try db.exec("CREATE TABLE test (id INTEGER PRIMARY KEY, name TEXT, value REAL, data BLOB)")
     }
