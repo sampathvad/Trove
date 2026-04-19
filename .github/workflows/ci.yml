@@ -16,7 +16,7 @@ jobs:
     runs-on: macos-14
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v6.0.2
       - name: Install SwiftLint
         run: brew install swiftlint
       - name: Lint
@@ -26,7 +26,7 @@ jobs:
     name: Test
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v6.0.2
       - name: Build and test
         run: |
           xcodebuild test \
@@ -37,7 +37,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
       - name: Upload results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7.0.1
         if: failure()
         with:
           name: test-results
@@ -51,7 +51,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v6.0.2
       - name: Build archive (unsigned)
         run: |
           xcodebuild archive \
@@ -71,6 +71,6 @@ jobs:
             -ov -format UDZO \
             build/Trove.dmg
       - name: Upload to release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3.0.0
         with:
           files: build/Trove.dmg
