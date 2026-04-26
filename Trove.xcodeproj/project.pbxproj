@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0617E6BD0C3DC793DEEABB9E /* TroveKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DF9F3798049D173989AEC678 /* TroveKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		27621A561EA828ADA3DDFBE9 /* DetailPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C3D25576931B58C339DED75 /* DetailPreviewView.swift */; };
 		27AC725EBF38AFDF6DF71D65 /* Clip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A55577669334BFBE3B38DDE /* Clip.swift */; };
 		2D90C1A6438F4E8A5E5A7572 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 399CAC92BC873A071CE11390 /* GRDB */; };
@@ -33,7 +32,6 @@
 		9B7BF1E4A41C39BED7D3FB75 /* ShellFilterRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08FC1DDF62B002A5EC4F9BC5 /* ShellFilterRunner.swift */; };
 		9C40B335B81D4E9C57DC1668 /* ClipStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9790B30A51941B0704F52259 /* ClipStore.swift */; };
 		9EAAA13F17F939968D1A052E /* CollectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 420565FF446079AC70F8A9C4 /* CollectionStore.swift */; };
-		A135DE9E0A6041394AB3EBFA /* TroveKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DF9F3798049D173989AEC678 /* TroveKit.framework */; };
 		AABFF14F4A12D4CE8706E061 /* HotkeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 969AA7CA3B453A093A299367 /* HotkeyService.swift */; };
 		AE034358EC96A6309305BA39 /* InstallLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C81C6F416A3B64A0045A4F4 /* InstallLocation.swift */; };
 		BADD1C935C35A7DFEADEE020 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = A1C489FD5F378D8EFFB67632 /* KeyboardShortcuts */; };
@@ -66,28 +64,14 @@
 			remoteGlobalIDString = 2F5659B0B96FE667AECCBC02;
 			remoteInfo = Trove;
 		};
-		E22C1FFB572A8CEDC0BEADFE /* PBXContainerItemProxy */ = {
+		D3A3CA25B487E9198F6E2587 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = C156DD33915B495E65031E46 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = E2FA214D95367F83AB156304;
-			remoteInfo = TroveKit;
+			remoteGlobalIDString = 2F5659B0B96FE667AECCBC02;
+			remoteInfo = Trove;
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		AB9889B55D17A647791A6EC2 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				0617E6BD0C3DC793DEEABB9E /* TroveKit.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		08FC1DDF62B002A5EC4F9BC5 /* ShellFilterRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellFilterRunner.swift; sourceTree = "<group>"; };
@@ -157,14 +141,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				30BFBE031CE2C90A91E39E9F /* GRDB in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		9EF060FA1DCD747C972598C0 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				A135DE9E0A6041394AB3EBFA /* TroveKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -386,13 +362,11 @@
 			buildConfigurationList = D0DBFE38173CFF740AE2CB3E /* Build configuration list for PBXNativeTarget "TroveTests" */;
 			buildPhases = (
 				03F246F6F5AC333CFAEDC487 /* Sources */,
-				9EF060FA1DCD747C972598C0 /* Frameworks */,
-				AB9889B55D17A647791A6EC2 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				DBFCA0805F70B026EEEB1008 /* PBXTargetDependency */,
+				A1B6248538490CE5F12F5568 /* PBXTargetDependency */,
 			);
 			name = TroveTests;
 			packageProductDependencies = (
@@ -556,10 +530,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		DBFCA0805F70B026EEEB1008 /* PBXTargetDependency */ = {
+		A1B6248538490CE5F12F5568 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = E2FA214D95367F83AB156304 /* TroveKit */;
-			targetProxy = E22C1FFB572A8CEDC0BEADFE /* PBXContainerItemProxy */;
+			target = 2F5659B0B96FE667AECCBC02 /* Trove */;
+			targetProxy = D3A3CA25B487E9198F6E2587 /* PBXContainerItemProxy */;
 		};
 		F0AFB76E9DF831F440C67FDB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -580,6 +554,7 @@
 					"@loader_path/../Frameworks",
 				);
 				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Trove.app/Contents/MacOS/Trove";
 			};
 			name = Debug;
 		};
@@ -667,7 +642,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.4;
+				MARKETING_VERSION = 0.1.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = app.trove.Trove;
@@ -690,6 +665,7 @@
 					"@loader_path/../Frameworks",
 				);
 				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Trove.app/Contents/MacOS/Trove";
 			};
 			name = Release;
 		};
@@ -783,7 +759,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.4;
+				MARKETING_VERSION = 0.1.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
