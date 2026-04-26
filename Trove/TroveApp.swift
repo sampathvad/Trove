@@ -29,6 +29,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
+        // When the app is launched as a unit-test host, XCTest is about to
+        // inject the test bundle. Skip all real startup work: it would block
+        // the main thread, request accessibility permissions, and otherwise
+        // confuse the test runner into timing out.
+        if isRunningTests { return }
+
         if InstallLocation.promptToMoveIfNeeded() { return }
 
         Task {
@@ -78,6 +84,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !TroveSettings.hasShownFirstRun else { return }
         menuBarController?.showFirstRunPopover()
         TroveSettings.hasShownFirstRun = true
+    }
+
+    private var isRunningTests: Bool {
+        let env = ProcessInfo.processInfo.environment
+        return env["XCTestConfigurationFilePath"] != nil
+            || env["XCTestSessionIdentifier"] != nil
+            || env["XCTestBundlePath"] != nil
+            || NSClassFromString("XCTestCase") != nil
     }
 
     private func syncLaunchAtLogin() {
