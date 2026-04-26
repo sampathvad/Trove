@@ -29,6 +29,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
+        if InstallLocation.promptToMoveIfNeeded() { return }
+
         Task {
             await ClipStore.shared.setup()
             await CollectionStore.shared.load()
@@ -82,11 +84,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let service = SMAppService.mainApp
         if TroveSettings.launchAtLogin {
             if service.status != .enabled {
-                try? service.register()
+                do {
+                    try service.register()
+                } catch {
+                    AuditLog.launchAtLoginFailed(error: error)
+                }
             }
         } else {
             if service.status == .enabled {
-                try? service.unregister()
+                do {
+                    try service.unregister()
+                } catch {
+                    AuditLog.launchAtLoginFailed(error: error)
+                }
             }
         }
     }

@@ -1,29 +1,108 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scheme LastUpgradeVersion = "1500" version = "1.7">
-   <BuildAction parallelizeBuildables = "YES" buildImplicitDependencies = "YES">
+<Scheme
+   LastUpgradeVersion = "2640"
+   version = "1.3">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES">
       <BuildActionEntries>
-         <BuildActionEntry buildForTesting = "YES" buildForRunning = "YES" buildForProfiling = "YES" buildForArchiving = "YES" buildForAnalyzing = "YES">
-            <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "FF53240E643F017BE959F5A8" BuildableName = "Trove.app" BlueprintName = "Trove" ReferencedContainer = "container:Trove.xcodeproj">
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "2F5659B0B96FE667AECCBC02"
+               BuildableName = "Trove.app"
+               BlueprintName = "Trove"
+               ReferencedContainer = "container:Trove.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
-   <TestAction buildConfiguration = "Debug" selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv = "YES">
+   <TestAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "2F5659B0B96FE667AECCBC02"
+            BuildableName = "Trove.app"
+            BlueprintName = "Trove"
+            ReferencedContainer = "container:Trove.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <Testables>
-         <TestableReference skipped = "NO">
-            <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "F141A6067E1877F74CA212A6" BuildableName = "TroveTests.xctest" BlueprintName = "TroveTests" ReferencedContainer = "container:Trove.xcodeproj">
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "905B373DA485CD8228120E6F"
+               BuildableName = "TroveTests.xctest"
+               BlueprintName = "TroveTests"
+               ReferencedContainer = "container:Trove.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "511D905DCF5D1EFABF24B005"
+               BuildableName = "TroveUITests.xctest"
+               BlueprintName = "TroveUITests"
+               ReferencedContainer = "container:Trove.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
    </TestAction>
-   <LaunchAction buildConfiguration = "Debug" selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle = "0" useCustomWorkingDirectory = "NO" ignoresPersistentStateOnLaunch = "NO" debugDocumentVersioning = "YES" debugServiceExtension = "internal" allowLocationSimulation = "YES">
-      <BuildableProductRunnable runnableDebuggingMode = "0">
-         <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "FF53240E643F017BE959F5A8" BuildableName = "Trove.app" BlueprintName = "Trove" ReferencedContainer = "container:Trove.xcodeproj">
+   <LaunchAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      launchStyle = "0"
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
+      allowLocationSimulation = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "2F5659B0B96FE667AECCBC02"
+            BuildableName = "Trove.app"
+            BlueprintName = "Trove"
+            ReferencedContainer = "container:Trove.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
-   <ArchiveAction buildConfiguration = "Release" revealArchiveInOrganizer = "YES">
-      <BuildableReference BuildableIdentifier = "primary" BlueprintIdentifier = "FF53240E643F017BE959F5A8" BuildableName = "Trove.app" BlueprintName = "Trove" ReferencedContainer = "container:Trove.xcodeproj">
-      </BuildableReference>
+   <ProfileAction
+      buildConfiguration = "Release"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      savedToolIdentifier = ""
+      useCustomWorkingDirectory = "NO"
+      debugDocumentVersioning = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "2F5659B0B96FE667AECCBC02"
+            BuildableName = "Trove.app"
+            BlueprintName = "Trove"
+            ReferencedContainer = "container:Trove.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </ProfileAction>
+   <AnalyzeAction
+      buildConfiguration = "Debug">
+   </AnalyzeAction>
+   <ArchiveAction
+      buildConfiguration = "Release"
+      revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>

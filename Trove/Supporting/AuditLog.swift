@@ -25,6 +25,10 @@ enum AuditLog {
         write("AI \(action) on clip \(clipId.uuidString.prefix(8)) via \(provider)")
     }
 
+    static func launchAtLoginFailed(error: Error) {
+        write("LAUNCH_AT_LOGIN_FAILED \(error.localizedDescription)")
+    }
+
     // MARK: - Private
 
     private static func write(_ message: String) {
