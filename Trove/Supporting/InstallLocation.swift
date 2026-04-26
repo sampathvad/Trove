@@ -15,6 +15,17 @@ enum InstallLocation {
             return false
         }
 
+        // Skip during XCTest runs — the modal alert would block the test host
+        // process and the runner times out at "Test runner never began executing
+        // tests after launching".
+        let env = ProcessInfo.processInfo.environment
+        if env["XCTestConfigurationFilePath"] != nil ||
+           env["XCTestSessionIdentifier"] != nil ||
+           env["XCTestBundlePath"] != nil ||
+           NSClassFromString("XCTestCase") != nil {
+            return false
+        }
+
         // Don't nag in DEBUG builds running from DerivedData.
         #if DEBUG
         if path.contains("/DerivedData/") || path.contains("/Build/Products/") {
