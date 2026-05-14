@@ -26,7 +26,7 @@ final class ClipStore: ObservableObject {
             let dbPath = appSupport.appendingPathComponent("trove.db").path
             db = try SQLiteDB(path: dbPath)
             try migrate()
-            loadRecent()
+            await loadRecent()
             pruneExpired()
         } catch {
             print("ClipStore setup failed: \(error)")
@@ -74,7 +74,7 @@ final class ClipStore: ObservableObject {
                 VALUES (?,?,?)
             """, [.text(clip.id.uuidString), .text(searchableText), .text(clip.sourceApp ?? "")])
             enforceHistoryLimit()
-            loadRecent()
+            await loadRecent()
             AuditLog.captured(type: clip.type.rawValue, sourceApp: clip.sourceApp,
                               charCount: clip.metadata.characterCount)
         } catch {
@@ -186,12 +186,17 @@ final class ClipStore: ObservableObject {
 
     // MARK: - Private helpers
 
-    private func loadRecent() {
+    private func loadRecent() async {
         let limit = TroveSettings.maxHistoryCount > 0 ? TroveSettings.maxHistoryCount : 5000
         let rows = (try? db?.query(
             "SELECT * FROM clips ORDER BY is_pinned DESC, created_at DESC LIMIT ?",
             [.int(limit)])) ?? []
-        clips = rows.compactMap(Self.clip)
+        // Decode JSON blobs off the main actor — at 5k clips this would
+        // otherwise pin the main thread for a second or two during launch.
+        let decoded = await Task.detached(priority: .userInitiated) {
+            rows.compactMap(Self.clip)
+        }.value
+        clips = decoded
     }
 
     private func enforceHistoryLimit() {
@@ -244,7 +249,7 @@ final class ClipStore: ObservableObject {
         (try? JSONEncoder().encode(value)) ?? Data()
     }
 
-    private static func clip(from row: [String: SQLValue]) -> Clip? {
+    nonisolated private static func clip(from row: [String: SQLValue]) -> Clip? {
         guard let idStr = row["id"]?.stringValue, let id = UUID(uuidString: idStr),
               let contentData = row["content"]?.blobValue,
               let content = try? JSONDecoder().decode(ClipContent.self, from: contentData)

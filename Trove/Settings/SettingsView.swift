@@ -213,6 +213,7 @@ struct PrivacySettingsView: View {
     @State private var storeSensitive = TroveSettings.storeSensitiveClips
     @State private var clearOnLock = TroveSettings.clearHistoryOnLock
     @State private var blacklist = TroveSettings.blacklistedApps
+    @State private var displayNames: [String: String] = [:]
 
     var body: some View {
         Form {
@@ -228,7 +229,7 @@ struct PrivacySettingsView: View {
             Section {
                 ForEach(blacklist, id: \.self) { bundleId in
                     HStack {
-                        Text(bundleId.appDisplayName ?? bundleId)
+                        Text(displayNames[bundleId] ?? bundleId)
                         Spacer()
                         Button { remove(bundleId) } label: {
                             Image(systemName: "minus.circle").foregroundStyle(.red)
@@ -245,6 +246,18 @@ struct PrivacySettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
+        .task(id: blacklist) { await resolveDisplayNames() }
+    }
+
+    private func resolveDisplayNames() async {
+        // NSWorkspace.urlForApplication(withBundleIdentifier:) hits Launch
+        // Services synchronously; resolving 10+ ids on the main thread is
+        // what made the Settings window hang.
+        let ids = blacklist
+        let pairs = await Task.detached(priority: .utility) {
+            ids.map { ($0, $0.appDisplayName ?? $0) }
+        }.value
+        displayNames = Dictionary(uniqueKeysWithValues: pairs)
     }
 
     private func remove(_ id: String) {

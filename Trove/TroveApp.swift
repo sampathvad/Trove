@@ -49,13 +49,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { await monitor.start() }
 
         registerHotkeys()
-        SnippetExpander.shared.start()
         observeScreenLock()
+        observeAccessibilityChanges()
         showFirstRunIfNeeded()
-        syncLaunchAtLogin()
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            PasteService.requestAccessibilityIfNeeded()
+        // Defer everything that touches TCC / system services off the launch
+        // run-loop tick so the menu bar icon appears immediately.
+        Task { @MainActor in
+            SnippetExpander.shared.start()
+        }
+        Task.detached(priority: .utility) {
+            await AppDelegate.syncLaunchAtLogin()
         }
     }
 
@@ -80,6 +84,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// When the user returns to Trove after granting Accessibility in System
+    /// Settings, retry the snippet-expander event tap so it activates without
+    /// a relaunch.
+    private func observeAccessibilityChanges() {
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            SnippetExpander.shared.startIfPermitted()
+        }
+    }
+
     private func showFirstRunIfNeeded() {
         guard !TroveSettings.hasShownFirstRun else { return }
         menuBarController?.showFirstRunPopover()
@@ -94,9 +111,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             || NSClassFromString("XCTestCase") != nil
     }
 
-    private func syncLaunchAtLogin() {
+    nonisolated static func syncLaunchAtLogin() async {
+        let shouldEnable = await MainActor.run { TroveSettings.launchAtLogin }
         let service = SMAppService.mainApp
-        if TroveSettings.launchAtLogin {
+        if shouldEnable {
             if service.status != .enabled {
                 do {
                     try service.register()
@@ -107,7 +125,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             if service.status == .enabled {
                 do {
-                    try service.unregister()
+                    try await service.unregister()
                 } catch {
                     AuditLog.launchAtLoginFailed(error: error)
                 }
