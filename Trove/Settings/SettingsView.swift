@@ -4,8 +4,13 @@ import AppKit
 
 struct SettingsView: View {
     private enum Tab: String, CaseIterable {
-        case general, clipboard, hotkeys, appearance, privacy, snippets, filters, advanced
-        var displayName: String { rawValue.capitalized }
+        case general, clipboard, hotkeys, appearance, privacy, sync, snippets, filters, ai, advanced
+        var displayName: String {
+            switch self {
+            case .ai: return "AI"
+            default: return rawValue.capitalized
+            }
+        }
         var icon: String {
             switch self {
             case .general: return "gearshape"
@@ -13,24 +18,56 @@ struct SettingsView: View {
             case .hotkeys: return "keyboard"
             case .appearance: return "paintbrush"
             case .privacy: return "lock.shield"
+            case .sync: return "icloud"
             case .snippets: return "text.badge.plus"
             case .filters: return "wand.and.stars"
+            case .ai: return "sparkles"
             case .advanced: return "wrench.and.screwdriver"
             }
         }
     }
 
     @State private var selectedTab: Tab = .general
+    @State private var query: String = ""
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            ForEach(Tab.allCases, id: \.self) { tab in
-                tabContent(for: tab)
-                    .tabItem { Label(tab.displayName, systemImage: tab.icon) }
-                    .tag(tab)
+        VStack(spacing: 0) {
+            HStack(spacing: 6) {
+                Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                TextField("Search settings", text: $query)
+                    .textFieldStyle(.plain)
+                    .onSubmit { jumpToFirstMatch() }
+                    .onChange(of: query) { _, _ in jumpToFirstMatch() }
+                if !query.isEmpty {
+                    Button {
+                        query = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.background.secondary)
+
+            TabView(selection: $selectedTab) {
+                ForEach(Tab.allCases, id: \.self) { tab in
+                    tabContent(for: tab)
+                        .tabItem { Label(tab.displayName, systemImage: tab.icon) }
+                        .tag(tab)
+                }
             }
         }
-        .frame(width: 580, height: 460)
+        .frame(width: 580, height: 500)
+    }
+
+    private func jumpToFirstMatch() {
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !q.isEmpty else { return }
+        if let match = Tab.allCases.first(where: { $0.displayName.lowercased().contains(q) }) {
+            selectedTab = match
+        }
     }
 
     @ViewBuilder
@@ -41,8 +78,10 @@ struct SettingsView: View {
         case .hotkeys:    HotkeySettingsView()
         case .appearance: AppearanceSettingsView()
         case .privacy:    PrivacySettingsView()
+        case .sync:       SyncSettingsView()
         case .snippets:   SnippetsSettingsView()
         case .filters:    FiltersSettingsView()
+        case .ai:         AISettingsView()
         case .advanced:   AdvancedSettingsView()
         }
     }
