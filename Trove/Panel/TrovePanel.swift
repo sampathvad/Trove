@@ -2,12 +2,14 @@ import AppKit
 import SwiftUI
 
 final class TrovePanel: NSPanel {
+    private var hasInstalledContent = false
+
     init() {
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: 620, height: 540),
             styleMask: [.nonactivatingPanel, .titled, .fullSizeContentView, .resizable],
             backing: .buffered,
-            defer: false
+            defer: true
         )
         isFloatingPanel = true
         level = .floating
@@ -18,7 +20,13 @@ final class TrovePanel: NSPanel {
         minSize = NSSize(width: 500, height: 400)
         standardWindowButton(.miniaturizeButton)?.isHidden = true
         standardWindowButton(.zoomButton)?.isHidden = true
+    }
 
+    /// Build the SwiftUI hierarchy the first time the panel is shown so the
+    /// cold render cost doesn't land on the launch run loop.
+    func installContentIfNeeded() {
+        guard !hasInstalledContent else { return }
+        hasInstalledContent = true
         let host = NSHostingController(rootView: PanelView())
         host.view.frame = NSRect(x: 0, y: 0, width: 620, height: 540)
         host.view.autoresizingMask = [.width, .height]
@@ -32,14 +40,15 @@ final class TrovePanel: NSPanel {
 @MainActor
 final class PanelController {
     static let shared = PanelController()
-    private let panel: TrovePanel
+    private lazy var panel: TrovePanel = TrovePanel()
     private var mouseMonitor: Any?
 
-    private init() { panel = TrovePanel() }
+    private init() {}
 
     func toggle() { panel.isVisible ? close() : open() }
 
     func open() {
+        panel.installContentIfNeeded()
         positionPanel()
         panel.setContentSize(NSSize(width: 620, height: 540))
         panel.makeKeyAndOrderFront(nil)

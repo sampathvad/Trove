@@ -11,6 +11,11 @@ final class SnippetExpander {
     private init() {}
 
     func start() {
+        // Installing a session event tap without Accessibility permission can
+        // leave the main thread stuck talking to TCC, which is what produces
+        // the beachball + "Trove is not responding" prompt at launch.
+        guard eventTap == nil, AXIsProcessTrusted() else { return }
+
         let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
         eventTap = CGEvent.tapCreate(
             tap: .cgAnnotatedSessionEventTap,
@@ -29,6 +34,9 @@ final class SnippetExpander {
         CFRunLoopAddSource(CFRunLoopGetMain(), src, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
     }
+
+    /// Call after Accessibility permission is granted to bring the event tap up.
+    func startIfPermitted() { start() }
 
     func stop() {
         if let tap = eventTap { CGEvent.tapEnable(tap: tap, enable: false) }

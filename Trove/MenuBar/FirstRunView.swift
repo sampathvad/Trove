@@ -12,10 +12,16 @@ struct FirstRunView: View {
             Text("Press **⌘⇧V** to open anytime.")
                 .font(.body)
                 .foregroundStyle(.secondary)
-            Button("Got it") { onDismiss() }
-                .keyboardShortcut(.defaultAction)
+            Text("To paste directly into any app when you press Enter, Trove needs Accessibility access. Without it, clips are still copied — just press ⌘V yourself.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Button("Continue") {
+                onDismiss()
+                PasteService.requestAccessibilityIfNeeded()
+            }
+            .keyboardShortcut(.defaultAction)
         }
         .padding(20)
-        .frame(width: 260)
+        .frame(width: 280)
     }
 }
