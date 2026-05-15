@@ -99,6 +99,17 @@ struct ClipRow: View {
 
     private var trailing: some View {
         HStack(spacing: 6) {
+            if let n = clip.metadata.copyCount, n > 1 {
+                Text("×\(n)")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .monospacedDigit()
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(
+                        Capsule().fill(Color.primary.opacity(0.06))
+                    )
+            }
             if clip.isPinned {
                 Image(systemName: "pin.fill")
                     .font(.caption)

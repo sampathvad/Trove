@@ -44,7 +44,16 @@ final class ClipStore: ObservableObject {
             return
         }
 
-        guard !clips.contains(where: { isDuplicate($0, clip) }) else { return }
+        let hash = clip.content.contentHash
+
+        // If this content already exists, bump it instead of inserting a duplicate row.
+        if let existingId = (try? db.query(
+            "SELECT id FROM clips WHERE content_hash=? LIMIT 1",
+            [.text(hash)]
+        ))?.first?["id"]?.stringValue.flatMap(UUID.init(uuidString:)) {
+            await bumpExisting(id: existingId, sourceApp: clip.sourceApp)
+            return
+        }
 
         let searchableText = clip.content.previewText ?? ""
         // Sensitive clips auto-expire in 5 minutes
@@ -55,8 +64,8 @@ final class ClipStore: ObservableObject {
         do {
             try db.run("""
                 INSERT OR IGNORE INTO clips
-                    (id, content, type, metadata, created_at, source_app, is_pinned, collection_id, is_sensitive, expiry_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?)
+                    (id, content, type, metadata, created_at, source_app, is_pinned, collection_id, is_sensitive, expiry_at, content_hash)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
             """, [
                 .text(clip.id.uuidString),
                 .blob(encode(clip.content)),
@@ -67,7 +76,8 @@ final class ClipStore: ObservableObject {
                 .int(clip.isPinned ? 1 : 0),
                 clip.collectionId.map { .text($0.uuidString) } ?? .null,
                 .int(clip.isSensitive ? 1 : 0),
-                expiryAt
+                expiryAt,
+                .text(hash)
             ])
             try db.run("""
                 INSERT OR IGNORE INTO clips_fts (id, searchable_text, source_app)
@@ -225,8 +235,8 @@ final class ClipStore: ObservableObject {
         let text = clip.content.previewText ?? ""
         try? db?.run("""
             INSERT OR IGNORE INTO clips
-                (id,content,type,metadata,created_at,source_app,is_pinned,collection_id,is_sensitive)
-            VALUES (?,?,?,?,?,?,?,?,?)
+                (id,content,type,metadata,created_at,source_app,is_pinned,collection_id,is_sensitive,content_hash)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
         """, [
             .text(clip.id.uuidString), .blob(encode(clip.content)),
             .text(clip.type.rawValue), .blob(encode(clip.metadata)),
@@ -234,15 +244,56 @@ final class ClipStore: ObservableObject {
             clip.sourceApp.map { .text($0) } ?? .null,
             .int(clip.isPinned ? 1 : 0),
             clip.collectionId.map { .text($0.uuidString) } ?? .null,
-            .int(clip.isSensitive ? 1 : 0)
+            .int(clip.isSensitive ? 1 : 0),
+            .text(clip.content.contentHash)
         ])
         try? db?.run("INSERT OR IGNORE INTO clips_fts(id,searchable_text,source_app) VALUES(?,?,?)",
                      [.text(clip.id.uuidString), .text(text), .text(clip.sourceApp ?? "")])
     }
 
-    private func isDuplicate(_ a: Clip, _ b: Clip) -> Bool {
-        guard case .text(let ta) = a.content, case .text(let tb) = b.content else { return false }
-        return ta == tb
+    private func bumpExisting(id: UUID, sourceApp: String?) async {
+        guard let db else { return }
+        let now = Date()
+
+        // Read existing row from DB (covers clips not in the recent in-memory window).
+        let existing = (try? db.query(
+            "SELECT type, metadata, is_sensitive FROM clips WHERE id=? LIMIT 1",
+            [.text(id.uuidString)]
+        ))?.first
+
+        var meta: ClipMetadata = existing?["metadata"]?.blobValue
+            .flatMap { try? JSONDecoder().decode(ClipMetadata.self, from: $0) }
+            ?? ClipMetadata()
+        meta.copyCount = (meta.copyCount ?? 1) + 1
+
+        let isSensitive = existing?["is_sensitive"]?.intValue == 1
+
+        if isSensitive {
+            // Refresh expiry so a repeatedly-copied sensitive clip doesn't vanish mid-use.
+            try? db.run(
+                "UPDATE clips SET created_at=?, metadata=?, expiry_at=? WHERE id=?",
+                [
+                    .real(now.timeIntervalSince1970),
+                    .blob(encode(meta)),
+                    .real(now.addingTimeInterval(300).timeIntervalSince1970),
+                    .text(id.uuidString)
+                ]
+            )
+        } else {
+            try? db.run(
+                "UPDATE clips SET created_at=?, metadata=? WHERE id=?",
+                [
+                    .real(now.timeIntervalSince1970),
+                    .blob(encode(meta)),
+                    .text(id.uuidString)
+                ]
+            )
+        }
+
+        await loadRecent()
+        AuditLog.captured(type: existing?["type"]?.stringValue ?? "duplicate",
+                          sourceApp: sourceApp,
+                          charCount: meta.characterCount)
     }
 
     private func encode<T: Encodable>(_ value: T) -> Data {
@@ -317,6 +368,24 @@ final class ClipStore: ObservableObject {
         // Incremental migrations — ALTER TABLE is safe to attempt; ignore if column exists
         addColumnIfMissing(table: "clips", column: "expiry_at", type: "REAL")
         try? db?.exec("CREATE INDEX IF NOT EXISTS idx_clips_expiry ON clips(expiry_at) WHERE expiry_at IS NOT NULL;")
+
+        addColumnIfMissing(table: "clips", column: "content_hash", type: "TEXT")
+        try? db?.exec("CREATE INDEX IF NOT EXISTS idx_clips_content_hash ON clips(content_hash);")
+        backfillContentHashesIfNeeded()
+    }
+
+    private func backfillContentHashesIfNeeded() {
+        guard let db else { return }
+        let rows = (try? db.query("SELECT id, content FROM clips WHERE content_hash IS NULL")) ?? []
+        guard !rows.isEmpty else { return }
+        for row in rows {
+            guard let id = row["id"]?.stringValue,
+                  let blob = row["content"]?.blobValue,
+                  let content = try? JSONDecoder().decode(ClipContent.self, from: blob)
+            else { continue }
+            try? db.run("UPDATE clips SET content_hash=? WHERE id=?",
+                        [.text(content.contentHash), .text(id)])
+        }
     }
 
     private func addColumnIfMissing(table: String, column: String, type: String) {

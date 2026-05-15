@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import CryptoKit
 
 struct Clip: Identifiable, Codable, Equatable {
     let id: UUID
@@ -49,6 +50,27 @@ enum ClipContent: Codable, Equatable {
         case .image: return nil
         case .file(let url): return url.lastPathComponent
         }
+    }
+
+    // Stable per-case hash used to dedupe re-copied clips. Prefix per case so
+    // a text "abc" can't collide with a file URL "abc".
+    var contentHash: String {
+        var hasher = SHA256()
+        switch self {
+        case .text(let s):
+            hasher.update(data: Data("T:".utf8))
+            hasher.update(data: Data(s.utf8))
+        case .image(let d):
+            hasher.update(data: Data("I:".utf8))
+            hasher.update(data: d)
+        case .file(let url):
+            hasher.update(data: Data("F:".utf8))
+            hasher.update(data: Data(url.absoluteString.utf8))
+        case .richText(let d):
+            hasher.update(data: Data("R:".utf8))
+            hasher.update(data: d)
+        }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 }
 
@@ -102,6 +124,7 @@ struct ClipMetadata: Codable, Equatable {
     var fileSize: Int?
     var language: String?
     var colorSpace: String?
+    var copyCount: Int?
 }
 
 struct Collection: Identifiable, Codable {
