@@ -52,25 +52,44 @@ enum ClipContent: Codable, Equatable {
         }
     }
 
-    // Stable per-case hash used to dedupe re-copied clips. Prefix per case so
-    // a text "abc" can't collide with a file URL "abc".
+    // Stable hash used to dedupe re-copied clips. Hashes the *visible* text
+    // (after RTF→plain decoding + whitespace trim) so styled copies of the
+    // same string collapse into one row. Images and files still hash their
+    // raw bytes / URL. The `V1:` prefix versions the scheme for future
+    // schema bumps (see ClipStore.rehashAllIfNeeded).
     var contentHash: String {
         var hasher = SHA256()
+        hasher.update(data: Data("V1:".utf8))
         switch self {
         case .text(let s):
             hasher.update(data: Data("T:".utf8))
-            hasher.update(data: Data(s.utf8))
+            hasher.update(data: Data(Self.normalizeText(s).utf8))
+        case .richText(let d):
+            let plain = (try? NSAttributedString(
+                data: d,
+                options: [.documentType: NSAttributedString.DocumentType.rtf],
+                documentAttributes: nil
+            ))?.string ?? ""
+            if plain.isEmpty {
+                hasher.update(data: Data("R-blob:".utf8))
+                hasher.update(data: d)
+            } else {
+                hasher.update(data: Data("T:".utf8))
+                hasher.update(data: Data(Self.normalizeText(plain).utf8))
+            }
         case .image(let d):
             hasher.update(data: Data("I:".utf8))
             hasher.update(data: d)
         case .file(let url):
             hasher.update(data: Data("F:".utf8))
             hasher.update(data: Data(url.absoluteString.utf8))
-        case .richText(let d):
-            hasher.update(data: Data("R:".utf8))
-            hasher.update(data: d)
         }
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func normalizeText(_ s: String) -> String {
+        s.replacingOccurrences(of: "\r\n", with: "\n")
+         .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

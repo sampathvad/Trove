@@ -52,6 +52,7 @@ SOURCES = [
     "Trove/Supporting/TroveSettings.swift",
     "Trove/Supporting/NSColor+Hex.swift",
     "Trove/Supporting/ImageOCR.swift",
+    "Trove/Supporting/InstallLocation.swift",
     # Persistence (SQLite wrapper)
     "Trove/Persistence/SQLiteDB.swift",
     # Audit
@@ -71,6 +72,7 @@ TEST_SOURCES = [
     "TroveTests/FilterEngineTests.swift",
     "TroveTests/SQLiteDBTests.swift",
     "TroveTests/ClipExtractorTests.swift",
+    "TroveTests/ClipDedupTests.swift",
 ]
 
 UITEST_SOURCES = [

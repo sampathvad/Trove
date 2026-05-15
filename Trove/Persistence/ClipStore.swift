@@ -372,6 +372,87 @@ final class ClipStore: ObservableObject {
         addColumnIfMissing(table: "clips", column: "content_hash", type: "TEXT")
         try? db?.exec("CREATE INDEX IF NOT EXISTS idx_clips_content_hash ON clips(content_hash);")
         backfillContentHashesIfNeeded()
+        rehashAllIfNeeded()
+    }
+
+    private static let currentHashSchemaVersion = 1
+    private static let hashSchemaVersionKey = "troveClipHashSchemaVersion"
+
+    /// Re-compute `content_hash` for every existing row when the hash scheme
+    /// changes (e.g., V1 normalizes RTF→plain text). Collapses rows that
+    /// were fragmented by the old scheme into a single survivor, summing
+    /// their `copyCount`. Keyed on `troveClipHashSchemaVersion` so it runs
+    /// exactly once per scheme bump.
+    private func rehashAllIfNeeded() {
+        guard let db else { return }
+        let stored = UserDefaults.standard.integer(forKey: Self.hashSchemaVersionKey)
+        guard stored < Self.currentHashSchemaVersion else { return }
+
+        let rows = (try? db.query(
+            "SELECT id, content, metadata, created_at, is_pinned FROM clips"
+        )) ?? []
+        guard !rows.isEmpty else {
+            UserDefaults.standard.set(Self.currentHashSchemaVersion, forKey: Self.hashSchemaVersionKey)
+            return
+        }
+
+        struct RehashRow {
+            let id: String
+            let metadata: ClipMetadata
+            let createdAt: Double
+            let isPinned: Bool
+        }
+
+        var buckets: [String: [RehashRow]] = [:]
+        for row in rows {
+            guard let id = row["id"]?.stringValue,
+                  let blob = row["content"]?.blobValue,
+                  let content = try? JSONDecoder().decode(ClipContent.self, from: blob)
+            else { continue }
+            let metadata = row["metadata"]?.blobValue
+                .flatMap { try? JSONDecoder().decode(ClipMetadata.self, from: $0) } ?? ClipMetadata()
+            let createdAt = row["created_at"]?.realValue ?? 0
+            let isPinned = row["is_pinned"]?.intValue == 1
+            buckets[content.contentHash, default: []].append(
+                RehashRow(id: id, metadata: metadata, createdAt: createdAt, isPinned: isPinned)
+            )
+        }
+
+        do {
+            try db.transaction {
+                for (hash, group) in buckets {
+                    if group.count == 1 {
+                        try db.run(
+                            "UPDATE clips SET content_hash=? WHERE id=?",
+                            [.text(hash), .text(group[0].id)]
+                        )
+                    } else {
+                        // Pinned survives over unpinned; then most-recent wins.
+                        let sorted = group.sorted {
+                            if $0.isPinned != $1.isPinned { return $0.isPinned }
+                            return $0.createdAt > $1.createdAt
+                        }
+                        let survivor = sorted[0]
+                        let totalCount = sorted.reduce(0) { $0 + ($1.metadata.copyCount ?? 1) }
+                        var newMeta = survivor.metadata
+                        newMeta.copyCount = totalCount
+                        let metaBlob = (try? JSONEncoder().encode(newMeta)) ?? Data()
+                        try db.run(
+                            "UPDATE clips SET content_hash=?, metadata=? WHERE id=?",
+                            [.text(hash), .blob(metaBlob), .text(survivor.id)]
+                        )
+                        for loser in sorted.dropFirst() {
+                            try db.run("DELETE FROM clips WHERE id=?", [.text(loser.id)])
+                            try db.run("DELETE FROM clips_fts WHERE id=?", [.text(loser.id)])
+                        }
+                    }
+                }
+                return ()
+            }
+            UserDefaults.standard.set(Self.currentHashSchemaVersion, forKey: Self.hashSchemaVersionKey)
+        } catch {
+            print("rehashAllIfNeeded failed: \(error)")
+        }
     }
 
     private func backfillContentHashesIfNeeded() {
