@@ -7,6 +7,11 @@ import textwrap
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
+# Marketing version stamped into the generated pbxproj. Bump this on each
+# release; mirror the value in project.yml so both source-of-truth files
+# agree. Keeping it here means a regen never silently undoes a bump.
+MARKETING_VERSION = "0.1.10"
+
 def uid(name: str) -> str:
     """Deterministic 24-char hex ID from a name string."""
     return hashlib.sha256(name.encode()).hexdigest()[:24].upper()
@@ -533,7 +538,7 @@ def app_debug():
         "INFOPLIST_FILE": "Trove/Resources/Info.plist",
         "LD_RUNPATH_SEARCH_PATHS": '"$(inherited) @executable_path/../Frameworks"',
         "MACOSX_DEPLOYMENT_TARGET": "14.0",
-        "MARKETING_VERSION": "0.1.0",
+        "MARKETING_VERSION": MARKETING_VERSION,
         "PRODUCT_BUNDLE_IDENTIFIER": "app.trove.Trove",
         "PRODUCT_NAME": '"$(TARGET_NAME)"',
         "SDKROOT": "macosx",
@@ -553,7 +558,7 @@ def test_debug():
         "CURRENT_PROJECT_VERSION": "1",
         "GENERATE_INFOPLIST_FILE": "YES",
         "MACOSX_DEPLOYMENT_TARGET": "14.0",
-        "MARKETING_VERSION": "0.1.0",
+        "MARKETING_VERSION": MARKETING_VERSION,
         "PRODUCT_BUNDLE_IDENTIFIER": "app.trove.TroveTests",
         "PRODUCT_NAME": '"$(TARGET_NAME)"',
         "SDKROOT": "macosx",
@@ -567,7 +572,7 @@ def uitest_debug():
         "CURRENT_PROJECT_VERSION": "1",
         "GENERATE_INFOPLIST_FILE": "YES",
         "MACOSX_DEPLOYMENT_TARGET": "14.0",
-        "MARKETING_VERSION": "0.1.0",
+        "MARKETING_VERSION": MARKETING_VERSION,
         "PRODUCT_BUNDLE_IDENTIFIER": "app.trove.TroveUITests",
         "PRODUCT_NAME": '"$(TARGET_NAME)"',
         "SDKROOT": "macosx",
