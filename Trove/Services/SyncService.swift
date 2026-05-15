@@ -4,16 +4,36 @@ import Foundation
 @MainActor
 final class SyncService: ObservableObject {
     static let shared = SyncService()
-    private let db = CKContainer(identifier: "iCloud.app.trove.Trove").privateCloudDatabase
+
+    /// Flip to `true` once the iCloud capability is configured in
+    /// `Trove/Resources/Trove.entitlements` (keys:
+    /// `com.apple.developer.icloud-container-identifiers` and
+    /// `com.apple.developer.ubiquity-container-identifiers`) and an iCloud
+    /// container `iCloud.app.trove.Trove` exists in the Apple Developer
+    /// portal. Until then, instantiating `CKContainer(identifier:)` traps
+    /// with EXC_BREAKPOINT and kills the app.
+    static let isAvailable: Bool = false
+
+    private lazy var db: CKDatabase = CKContainer(identifier: "iCloud.app.trove.Trove").privateCloudDatabase
 
     @Published var syncStatus: SyncStatus = .idle
     enum SyncStatus { case idle, syncing, error(String) }
 
     private init() {}
 
-    func enable() { Task { await sync() } }
+    func enable() {
+        guard Self.isAvailable else {
+            syncStatus = .error("iCloud sync is not configured in this build")
+            return
+        }
+        Task { await sync() }
+    }
 
     func sync() async {
+        guard Self.isAvailable else {
+            syncStatus = .error("iCloud sync is not configured in this build")
+            return
+        }
         guard TroveSettings.iCloudSyncEnabled else { return }
         syncStatus = .syncing
         do {

@@ -399,12 +399,18 @@ struct SyncSettingsView: View {
         Form {
             Section {
                 Toggle("Enable iCloud sync", isOn: $syncEnabled)
+                    .disabled(!SyncService.isAvailable)
                     .onChange(of: syncEnabled) { _, v in
                         TroveSettings.iCloudSyncEnabled = v
                         if v { syncSvc.enable() }
                     }
-                Text("Stored in your private iCloud database — only you can access it.")
-                    .font(.caption).foregroundStyle(.secondary)
+                if SyncService.isAvailable {
+                    Text("Stored in your private iCloud database — only you can access it.")
+                        .font(.caption).foregroundStyle(.secondary)
+                } else {
+                    Text("iCloud sync is not enabled in this build. Add the iCloud capability and rebuild to turn it on.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
             }
             if syncEnabled {
                 Section("What to sync") {
@@ -431,6 +437,12 @@ struct SyncSettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
+        .onAppear {
+            if !SyncService.isAvailable {
+                syncEnabled = false
+                TroveSettings.iCloudSyncEnabled = false
+            }
+        }
     }
 }
 
