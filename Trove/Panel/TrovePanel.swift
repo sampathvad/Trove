@@ -1,6 +1,10 @@
 import AppKit
 import SwiftUI
 
+extension Notification.Name {
+    static let trovePanelShortcut = Notification.Name("TrovePanelShortcut")
+}
+
 final class TrovePanel: NSPanel {
     private var hasInstalledContent = false
 
@@ -42,6 +46,7 @@ final class PanelController {
     static let shared = PanelController()
     private lazy var panel: TrovePanel = TrovePanel()
     private var mouseMonitor: Any?
+    private var keyMonitor: Any?
 
     private init() {}
 
@@ -53,9 +58,11 @@ final class PanelController {
         panel.setContentSize(NSSize(width: 620, height: 540))
         panel.makeKeyAndOrderFront(nil)
         startMouseMonitor()
+        startKeyMonitor()
     }
 
     func close() {
+        stopKeyMonitor()
         stopMouseMonitor()
         panel.orderOut(nil)
     }
@@ -83,6 +90,28 @@ final class PanelController {
     private func stopMouseMonitor() {
         if let m = mouseMonitor { NSEvent.removeMonitor(m) }
         mouseMonitor = nil
+    }
+
+    private static let shortcutChars: Set<String> = ["p", "k", "z", "\u{7F}", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+    private func startKeyMonitor() {
+        stopKeyMonitor()
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, self.panel.isVisible, event.window === self.panel else { return event }
+            let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            guard mods == .command || mods == [.command, .numericPad] else { return event }
+            var chars = (event.charactersIgnoringModifiers ?? "").lowercased()
+            if event.keyCode == 51 { chars = "\u{7F}" }
+            guard !chars.isEmpty, Self.shortcutChars.contains(chars) else { return event }
+            if event.isARepeat { return nil }
+            NotificationCenter.default.post(name: .trovePanelShortcut, object: event)
+            return nil
+        }
+    }
+
+    private func stopKeyMonitor() {
+        if let m = keyMonitor { NSEvent.removeMonitor(m) }
+        keyMonitor = nil
     }
 
     private func positionPanel() {

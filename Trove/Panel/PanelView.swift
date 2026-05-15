@@ -52,18 +52,21 @@ struct PanelView: View {
         .onKeyPress(keys: [.downArrow]) { _ in moveSelection(by: 1) }
         .onKeyPress(keys: [.return]) { _ in pasteSelected(); return .handled }
         .onKeyPress(keys: [.space]) { _ in toggleDetail(); return .handled }
-        .onKeyPress(.init("p"), phases: .down) { e in guard e.modifiers == .command else { return .ignored }; pinSelected(); return .handled }
-        .onKeyPress(.delete, phases: .down) { e in guard e.modifiers == .command else { return .ignored }; deleteSelected(); return .handled }
-        .onKeyPress(.init("z"), phases: .down) { e in guard e.modifiers == .command else { return .ignored }; undoDelete(); return .handled }
-        .onKeyPress(.init("k"), phases: .down) { e in guard e.modifiers == .command else { return .ignored }; searchFocused = true; return .handled }
-        .onKeyPress(phases: .down) { e in
-            guard e.modifiers == .command,
-                  let n = e.key.character.wholeNumberValue,
-                  n >= 1 && n <= 9 else { return .ignored }
-            let idx = n - 1
-            guard idx < displayedClips.count else { return .handled }
-            PanelController.shared.closeAndPaste(displayedClips[idx])
-            return .handled
+        .onReceive(NotificationCenter.default.publisher(for: .trovePanelShortcut)) { note in
+            guard let event = note.object as? NSEvent,
+                  let chars = event.charactersIgnoringModifiers else { return }
+            switch chars {
+            case "p": pinSelected()
+            case "k": searchFocused = true
+            case "z": undoDelete()
+            case "\u{7F}": deleteSelected()
+            default:
+                if let n = Int(chars), (1...9).contains(n) {
+                    let idx = n - 1
+                    guard idx < displayedClips.count else { return }
+                    PanelController.shared.closeAndPaste(displayedClips[idx])
+                }
+            }
         }
         .onAppear { searchFocused = true; if selectedId == nil { selectedId = displayedClips.first?.id } }
         .onChange(of: displayedClips.count) { _, _ in
@@ -78,7 +81,6 @@ struct PanelView: View {
             TextField("Search clips…", text: $searchText)
                 .textFieldStyle(.plain)
                 .focused($searchFocused)
-                .onAppear { searchFocused = true }
                 .onChange(of: searchText) { _, q in Task { searchResults = await ClipStore.shared.search(q) } }
             if !searchText.isEmpty {
                 Button { searchText = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }
