@@ -45,14 +45,28 @@ enum AIAction: String, CaseIterable {
     }
 }
 
+// MARK: - Dependency seam
+
+struct KeychainAccess {
+    var load: (String) -> String?
+    static let live = KeychainAccess(load: KeychainHelper.load)
+}
+
 // MARK: - OpenAI Provider
 
 struct OpenAIProvider: AIProvider {
     let name = "OpenAI"
     private let model = "gpt-4o-mini"
+    private let session: URLSession
+    private let keychain: KeychainAccess
+
+    init(session: URLSession = .shared, keychain: KeychainAccess = .live) {
+        self.session = session
+        self.keychain = keychain
+    }
 
     func transform(prompt: String, content: String) async throws -> String {
-        guard let key = KeychainHelper.load(key: "trove.openai.apikey") else {
+        guard let key = keychain.load("trove.openai.apikey") else {
             throw AIError.missingAPIKey("OpenAI")
         }
         let body: [String: Any] = [
@@ -64,7 +78,7 @@ struct OpenAIProvider: AIProvider {
         req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (data, _) = try await URLSession.shared.data(for: req)
+        let (data, _) = try await session.data(for: req)
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         guard let text = (json?["choices"] as? [[String: Any]])?.first?["message"] as? [String: Any],
               let content = text["content"] as? String else {
@@ -79,9 +93,16 @@ struct OpenAIProvider: AIProvider {
 struct AnthropicProvider: AIProvider {
     let name = "Anthropic"
     private let model = "claude-haiku-4-5-20251001"
+    private let session: URLSession
+    private let keychain: KeychainAccess
+
+    init(session: URLSession = .shared, keychain: KeychainAccess = .live) {
+        self.session = session
+        self.keychain = keychain
+    }
 
     func transform(prompt: String, content: String) async throws -> String {
-        guard let key = KeychainHelper.load(key: "trove.anthropic.apikey") else {
+        guard let key = keychain.load("trove.anthropic.apikey") else {
             throw AIError.missingAPIKey("Anthropic")
         }
         let body: [String: Any] = [
@@ -95,7 +116,7 @@ struct AnthropicProvider: AIProvider {
         req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (data, _) = try await URLSession.shared.data(for: req)
+        let (data, _) = try await session.data(for: req)
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         guard let arr = json?["content"] as? [[String: Any]],
               let text = arr.first?["text"] as? String else {
@@ -111,6 +132,13 @@ struct OllamaProvider: AIProvider {
     let name = "Ollama (local)"
     var baseURL = "http://localhost:11434"
     var model = "llama3"
+    private let session: URLSession
+
+    init(session: URLSession = .shared, baseURL: String = "http://localhost:11434", model: String = "llama3") {
+        self.session = session
+        self.baseURL = baseURL
+        self.model = model
+    }
 
     func transform(prompt: String, content: String) async throws -> String {
         let body: [String: Any] = ["model": model, "prompt": prompt, "stream": false]
@@ -118,7 +146,7 @@ struct OllamaProvider: AIProvider {
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (data, _) = try await URLSession.shared.data(for: req)
+        let (data, _) = try await session.data(for: req)
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         guard let response = json?["response"] as? String else { throw AIError.invalidResponse }
         return response.trimmingCharacters(in: .whitespacesAndNewlines)
