@@ -15,8 +15,8 @@ final class AIProviderTests: XCTestCase {
 
     // MARK: - Helpers
 
-    private func ok(_ json: [String: Any]) -> (HTTPURLResponse, Data) {
-        let data = try! JSONSerialization.data(withJSONObject: json)
+    private func ok(_ json: [String: Any]) throws -> (HTTPURLResponse, Data) {
+        let data = try JSONSerialization.data(withJSONObject: json)
         let url = URL(string: "https://example.invalid")!
         let response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!
         return (response, data)
@@ -36,7 +36,7 @@ final class AIProviderTests: XCTestCase {
 
     func testOpenAIHappyPathReturnsUnwrappedContent() async throws {
         URLProtocolStub.handler = { [unowned self] _ in
-            self.ok([
+            try self.ok([
                 "choices": [
                     ["message": ["role": "assistant", "content": "  hello world  "]]
                 ]
@@ -60,7 +60,7 @@ final class AIProviderTests: XCTestCase {
     }
 
     func testOpenAIInvalidResponseShapeThrows() async {
-        URLProtocolStub.handler = { [unowned self] _ in self.ok([:]) }
+        URLProtocolStub.handler = { [unowned self] _ in try self.ok([:]) }
         let provider = OpenAIProvider(session: URLProtocolStub.session(), keychain: keychain("sk-fake"))
         do {
             _ = try await provider.transform(prompt: "p", content: "c")
@@ -74,7 +74,7 @@ final class AIProviderTests: XCTestCase {
 
     func testOpenAIRequestShapeUsesBearerAuthAndModel() async throws {
         URLProtocolStub.handler = { [unowned self] _ in
-            self.ok(["choices": [["message": ["content": "ok"]]]])
+            try self.ok(["choices": [["message": ["content": "ok"]]]])
         }
         let provider = OpenAIProvider(session: URLProtocolStub.session(), keychain: keychain("sk-test-123"))
         _ = try await provider.transform(prompt: "the prompt", content: "the content")
@@ -98,7 +98,7 @@ final class AIProviderTests: XCTestCase {
 
     func testAnthropicHappyPathReturnsFirstContentBlock() async throws {
         URLProtocolStub.handler = { [unowned self] _ in
-            self.ok([
+            try self.ok([
                 "content": [["type": "text", "text": "  claude says hi  "]]
             ])
         }
@@ -120,7 +120,7 @@ final class AIProviderTests: XCTestCase {
     }
 
     func testAnthropicInvalidResponseShapeThrows() async {
-        URLProtocolStub.handler = { [unowned self] _ in self.ok([:]) }
+        URLProtocolStub.handler = { [unowned self] _ in try self.ok([:]) }
         let provider = AnthropicProvider(session: URLProtocolStub.session(), keychain: keychain("ant-fake"))
         do {
             _ = try await provider.transform(prompt: "p", content: "c")
@@ -134,7 +134,7 @@ final class AIProviderTests: XCTestCase {
 
     func testAnthropicRequestShapeUsesXAPIKeyHeaderAndVersion() async throws {
         URLProtocolStub.handler = { [unowned self] _ in
-            self.ok(["content": [["type": "text", "text": "ok"]]])
+            try self.ok(["content": [["type": "text", "text": "ok"]]])
         }
         let provider = AnthropicProvider(session: URLProtocolStub.session(), keychain: keychain("ant-test-456"))
         _ = try await provider.transform(prompt: "ask claude", content: "c")
@@ -161,7 +161,7 @@ final class AIProviderTests: XCTestCase {
 
     func testOllamaHappyPathReturnsResponseField() async throws {
         URLProtocolStub.handler = { [unowned self] _ in
-            self.ok(["response": "  ollama replies  "])
+            try self.ok(["response": "  ollama replies  "])
         }
         let provider = OllamaProvider(session: URLProtocolStub.session(), baseURL: "http://localhost:11434", model: "llama3")
         let result = try await provider.transform(prompt: "p", content: "c")
@@ -169,7 +169,7 @@ final class AIProviderTests: XCTestCase {
     }
 
     func testOllamaInvalidResponseShapeThrows() async {
-        URLProtocolStub.handler = { [unowned self] _ in self.ok([:]) }
+        URLProtocolStub.handler = { [unowned self] _ in try self.ok([:]) }
         let provider = OllamaProvider(session: URLProtocolStub.session())
         do {
             _ = try await provider.transform(prompt: "p", content: "c")
@@ -182,7 +182,7 @@ final class AIProviderTests: XCTestCase {
     }
 
     func testOllamaRequestShapeHasNoAuthHeaders() async throws {
-        URLProtocolStub.handler = { [unowned self] _ in self.ok(["response": "ok"]) }
+        URLProtocolStub.handler = { [unowned self] _ in try self.ok(["response": "ok"]) }
         let provider = OllamaProvider(
             session: URLProtocolStub.session(),
             baseURL: "http://localhost:11434",
@@ -203,7 +203,7 @@ final class AIProviderTests: XCTestCase {
     }
 
     func testOllamaBaseURLIsRespected() async throws {
-        URLProtocolStub.handler = { [unowned self] _ in self.ok(["response": "ok"]) }
+        URLProtocolStub.handler = { [unowned self] _ in try self.ok(["response": "ok"]) }
         let provider = OllamaProvider(
             session: URLProtocolStub.session(),
             baseURL: "http://example.invalid:9999",
