@@ -1,0 +1,45 @@
+import Foundation
+
+final class URLProtocolStub: URLProtocol {
+    typealias Handler = (URLRequest) throws -> (HTTPURLResponse, Data)
+
+    static var handler: Handler?
+    static var capturedRequests: [URLRequest] = []
+
+    static func reset() {
+        handler = nil
+        capturedRequests = []
+    }
+
+    static func session() -> URLSession {
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [URLProtocolStub.self]
+        return URLSession(configuration: config)
+    }
+
+    override class func canInit(with request: URLRequest) -> Bool { true }
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+        URLProtocolStub.capturedRequests.append(request)
+
+        guard let handler = URLProtocolStub.handler else {
+            client?.urlProtocol(self, didFailWithError: NSError(
+                domain: "URLProtocolStub", code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "No handler registered"]
+            ))
+            return
+        }
+
+        do {
+            let (response, data) = try handler(request)
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: data)
+            client?.urlProtocolDidFinishLoading(self)
+        } catch {
+            client?.urlProtocol(self, didFailWithError: error)
+        }
+    }
+
+    override func stopLoading() {}
+}
