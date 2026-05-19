@@ -12,6 +12,9 @@ final class SQLiteDB {
         }
         try exec("PRAGMA journal_mode=WAL")
         try exec("PRAGMA foreign_keys=ON")
+        // Zero deleted page contents so dropped clips aren't recoverable
+        // from raw DB pages (and from FTS5 shadow tables) until VACUUM.
+        try exec("PRAGMA secure_delete=ON")
     }
 
     deinit { sqlite3_close(db) }
