@@ -25,12 +25,31 @@ final class ClipStore: ObservableObject {
             try FileManager.default.createDirectory(at: appSupport, withIntermediateDirectories: true)
             let dbPath = appSupport.appendingPathComponent("trove.db").path
             db = try SQLiteDB(path: dbPath)
+            // Restrict DB + sidecar files to owner-only (-rw-------).
+            // SQLite WAL mode also writes -wal and -shm files alongside the main DB.
+            for suffix in ["", "-wal", "-shm"] {
+                let path = dbPath + suffix
+                if FileManager.default.fileExists(atPath: path) {
+                    try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: path)
+                }
+            }
             try migrate()
             await loadRecent()
             pruneExpired()
+            vacuumIfStale()
         } catch {
             print("ClipStore setup failed: \(error)")
         }
+    }
+
+    private func vacuumIfStale() {
+        let key = "trove.lastVacuumAt"
+        let now = Date().timeIntervalSince1970
+        let last = UserDefaults.standard.double(forKey: key)
+        // Vacuum at most once every 7 days; reclaims pages so DELETE + secure_delete actually frees space.
+        if now - last < 7 * 86400 { return }
+        try? db?.exec("VACUUM")
+        UserDefaults.standard.set(now, forKey: key)
     }
 
     // MARK: - Insert
