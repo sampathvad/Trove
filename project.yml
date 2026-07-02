@@ -13,7 +13,10 @@ settings:
     MARKETING_VERSION: "0.1.12"
     CURRENT_PROJECT_VERSION: "1"
     PRODUCT_BUNDLE_IDENTIFIER: app.trove.Trove
-    DEVELOPMENT_TEAM: ""  # fill in your team ID
+    DEVELOPMENT_TEAM: ""  # fill in your team ID (or override in CI)
+    # Hardened runtime is a prerequisite for notarization. Harmless on
+    # unsigned/local builds — it only takes effect once the app is signed.
+    ENABLE_HARDENED_RUNTIME: "YES"
 
 targets:
   Trove:
