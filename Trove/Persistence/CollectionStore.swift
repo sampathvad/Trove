@@ -12,7 +12,7 @@ final class CollectionStore: ObservableObject {
         do {
             let rows = try db.query("SELECT * FROM collections ORDER BY order_index ASC")
             collections = rows.compactMap(Collection.init)
-        } catch { print("CollectionStore load failed: \(error)") }
+        } catch { Log.store.error("Collection load failed: \(error.localizedDescription, privacy: .public)") }
     }
 
     func create(name: String) async {
@@ -24,7 +24,7 @@ final class CollectionStore: ObservableObject {
                 [.text(c.id.uuidString), .text(c.name), .int(c.order), .real(c.createdAt.timeIntervalSince1970)]
             )
             collections.append(c)
-        } catch { print("Create collection failed: \(error)") }
+        } catch { Log.store.error("Create collection failed: \(error.localizedDescription, privacy: .public)") }
     }
 
     func rename(_ collection: Collection, to name: String) async {
@@ -34,7 +34,7 @@ final class CollectionStore: ObservableObject {
             if let idx = collections.firstIndex(where: { $0.id == collection.id }) {
                 collections[idx].name = name
             }
-        } catch { print("Rename failed: \(error)") }
+        } catch { Log.store.error("Rename collection failed: \(error.localizedDescription, privacy: .public)") }
     }
 
     func delete(_ collection: Collection) async {
@@ -43,7 +43,7 @@ final class CollectionStore: ObservableObject {
             try db.run("DELETE FROM collections WHERE id=?", [.text(collection.id.uuidString)])
             try db.run("UPDATE clips SET collection_id=NULL WHERE collection_id=?", [.text(collection.id.uuidString)])
             collections.removeAll { $0.id == collection.id }
-        } catch { print("Delete collection failed: \(error)") }
+        } catch { Log.store.error("Delete collection failed: \(error.localizedDescription, privacy: .public)") }
     }
 
     func assignClip(_ clip: Clip, to collection: Collection?) async {

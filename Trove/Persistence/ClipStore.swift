@@ -38,7 +38,7 @@ final class ClipStore: ObservableObject {
             pruneExpired()
             vacuumIfStale()
         } catch {
-            print("ClipStore setup failed: \(error)")
+            Log.store.error("Setup failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -107,7 +107,7 @@ final class ClipStore: ObservableObject {
             AuditLog.captured(type: clip.type.rawValue, sourceApp: clip.sourceApp,
                               charCount: clip.metadata.characterCount)
         } catch {
-            print("Insert failed: \(error)")
+            Log.store.error("Insert failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -187,13 +187,13 @@ final class ClipStore: ObservableObject {
         guard let db, !query.isEmpty else { return clips }
         let limit = max(TroveSettings.maxHistoryCount, 500)
         // FTS5 match
-        if query.count >= 2 {
+        if query.count >= 2, let match = Self.ftsMatchQuery(query) {
             let rows = (try? db.query("""
                 SELECT c.* FROM clips c
                 JOIN clips_fts f ON c.id=f.id
                 WHERE clips_fts MATCH ?
                 ORDER BY c.is_pinned DESC, c.created_at DESC LIMIT ?
-            """, [.text("\(query)*"), .int(limit)])) ?? []
+            """, [.text(match), .int(limit)])) ?? []
             if !rows.isEmpty { return rows.compactMap(Self.clip) }
         }
         // LIKE fallback
@@ -203,6 +203,22 @@ final class ClipStore: ObservableObject {
             ORDER BY is_pinned DESC, created_at DESC LIMIT ?
         """, [.text("%\(query)%"), .int(limit)])) ?? []
         return rows.compactMap(Self.clip)
+    }
+
+    /// Builds a safe FTS5 MATCH expression from raw user input. Each
+    /// whitespace-separated token is wrapped in double quotes (embedded quotes
+    /// doubled) so FTS5 operators (`"`, `*`, `:`, `-`, `NOT`, `AND`, `OR`,
+    /// `NEAR`) are treated as literal text rather than syntax — an unquoted
+    /// query like `foo:` or `a "b` otherwise makes FTS5 throw. A trailing `*`
+    /// on each token keeps the prefix-search behavior. Returns nil when the
+    /// input has no usable tokens. Internal (not private) so it can be tested.
+    nonisolated static func ftsMatchQuery(_ raw: String) -> String? {
+        let tokens = raw
+            .split(whereSeparator: { $0.isWhitespace })
+            .map { $0.replacingOccurrences(of: "\"", with: "\"\"") }
+            .filter { !$0.isEmpty }
+        guard !tokens.isEmpty else { return nil }
+        return tokens.map { "\"\($0)\"*" }.joined(separator: " ")
     }
 
     // MARK: - Clear all
@@ -470,7 +486,7 @@ final class ClipStore: ObservableObject {
             }
             UserDefaults.standard.set(Self.currentHashSchemaVersion, forKey: Self.hashSchemaVersionKey)
         } catch {
-            print("rehashAllIfNeeded failed: \(error)")
+            Log.store.error("Rehash failed: \(error.localizedDescription, privacy: .public)")
         }
     }
 
