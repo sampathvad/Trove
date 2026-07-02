@@ -28,6 +28,13 @@ final class AIProviderTests: XCTestCase {
         return (response, data)
     }
 
+    private func status(_ code: Int, _ json: [String: Any]) throws -> (HTTPURLResponse, Data) {
+        let data = try JSONSerialization.data(withJSONObject: json)
+        let url = URL(string: "https://example.invalid")!
+        let response = HTTPURLResponse(url: url, statusCode: code, httpVersion: nil, headerFields: nil)!
+        return (response, data)
+    }
+
     private func keychain(_ value: String?) -> KeychainAccess {
         KeychainAccess(load: { _ in value })
     }
@@ -94,6 +101,23 @@ final class AIProviderTests: XCTestCase {
         XCTAssertEqual(messages?.first?["content"], "the prompt")
     }
 
+    func testOpenAI401ThrowsHTTPErrorWithProviderMessage() async {
+        URLProtocolStub.handler = { [unowned self] _ in
+            try self.status(401, ["error": ["message": "Incorrect API key provided."]])
+        }
+        let provider = OpenAIProvider(session: URLProtocolStub.session(), keychain: keychain("sk-bad"))
+        do {
+            _ = try await provider.transform(prompt: "p", content: "c")
+            XCTFail("Expected httpError to throw")
+        } catch let AIError.httpError(provider, status, message) {
+            XCTAssertEqual(provider, "OpenAI")
+            XCTAssertEqual(status, 401)
+            XCTAssertEqual(message, "Incorrect API key provided.")
+        } catch {
+            XCTFail("Expected AIError.httpError, got \(error)")
+        }
+    }
+
     // MARK: - AnthropicProvider
 
     func testAnthropicHappyPathReturnsFirstContentBlock() async throws {
@@ -157,6 +181,23 @@ final class AIProviderTests: XCTestCase {
         XCTAssertEqual(messages?.first?["content"], "ask claude")
     }
 
+    func testAnthropic429ThrowsHTTPError() async {
+        URLProtocolStub.handler = { [unowned self] _ in
+            try self.status(429, ["type": "error", "error": ["type": "rate_limit_error", "message": "Overloaded"]])
+        }
+        let provider = AnthropicProvider(session: URLProtocolStub.session(), keychain: keychain("ant-key"))
+        do {
+            _ = try await provider.transform(prompt: "p", content: "c")
+            XCTFail("Expected httpError to throw")
+        } catch let AIError.httpError(provider, status, message) {
+            XCTAssertEqual(provider, "Anthropic")
+            XCTAssertEqual(status, 429)
+            XCTAssertEqual(message, "Overloaded")
+        } catch {
+            XCTFail("Expected AIError.httpError, got \(error)")
+        }
+    }
+
     // MARK: - OllamaProvider
 
     func testOllamaHappyPathReturnsResponseField() async throws {
@@ -213,6 +254,23 @@ final class AIProviderTests: XCTestCase {
 
         XCTAssertEqual(URLProtocolStub.capturedRequests.first?.url?.absoluteString,
                        "http://example.invalid:9999/api/generate")
+    }
+
+    func testOllama500ThrowsHTTPErrorWithStringMessage() async {
+        URLProtocolStub.handler = { [unowned self] _ in
+            try self.status(500, ["error": "model 'llama3' not found"])
+        }
+        let provider = OllamaProvider(session: URLProtocolStub.session())
+        do {
+            _ = try await provider.transform(prompt: "p", content: "c")
+            XCTFail("Expected httpError to throw")
+        } catch let AIError.httpError(provider, status, message) {
+            XCTAssertEqual(provider, "Ollama (local)")
+            XCTAssertEqual(status, 500)
+            XCTAssertEqual(message, "model 'llama3' not found")
+        } catch {
+            XCTFail("Expected AIError.httpError, got \(error)")
+        }
     }
 }
 
