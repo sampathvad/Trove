@@ -65,6 +65,9 @@ final class MenuBarController {
 
         menu.addItem(.separator())
 
+        menu.addItem(withTitle: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
+            .target = self
+
         menu.addItem(withTitle: "About Trove", action: #selector(openAbout), keyEquivalent: "")
             .target = self
         menu.addItem(.separator())
@@ -86,6 +89,10 @@ final class MenuBarController {
         }
         pauseMenuItem?.title = isPaused ? "Resume capturing" : "Pause capturing"
         updateIcon()
+    }
+
+    @objc private func checkForUpdates() {
+        UpdateService.shared.checkForUpdates()
     }
 
     @objc private func openAbout() {

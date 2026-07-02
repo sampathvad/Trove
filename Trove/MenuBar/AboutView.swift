@@ -27,7 +27,7 @@ struct AboutView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                Text("Version 0.1.0")
+                Text("Version \(Bundle.appVersion)")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
@@ -58,8 +58,13 @@ struct AboutView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
+                Button("Check for Updates…") {
+                    UpdateService.shared.checkForUpdates()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
                 Button("View on GitHub") {
-                    NSWorkspace.shared.open(URL(string: "https://github.com")!)
+                    NSWorkspace.shared.open(URL(string: "https://github.com/sampathvad/Trove")!)
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)

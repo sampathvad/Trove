@@ -70,7 +70,28 @@ jobs:
             -srcfolder build/Trove.app \
             -ov -format UDZO \
             build/Trove.dmg
+      - name: Generate & sign Sparkle appcast
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          if [ -z "$SPARKLE_PRIVATE_KEY" ]; then
+            echo "SPARKLE_PRIVATE_KEY secret not set — skipping appcast (DMG still ships)."
+            exit 0
+          fi
+          SPARKLE_VERSION=2.6.4
+          curl -L "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz" \
+            | tar -xJ -C "$RUNNER_TEMP"
+          printf '%s' "$SPARKLE_PRIVATE_KEY" > "$RUNNER_TEMP/sparkle_key"
+          # generate_appcast scans build/ for archives and writes build/appcast.xml,
+          # pointing enclosure URLs at this tag's release assets.
+          "$RUNNER_TEMP/bin/generate_appcast" \
+            --ed-key-file "$RUNNER_TEMP/sparkle_key" \
+            --download-url-prefix "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/" \
+            build/
+          rm -f "$RUNNER_TEMP/sparkle_key"
       - name: Upload to release
         uses: softprops/action-gh-release@v3.0.0
         with:
-          files: build/Trove.dmg
+          files: |
+            build/Trove.dmg
+            build/appcast.xml
