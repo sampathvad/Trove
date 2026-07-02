@@ -12,6 +12,7 @@ struct PanelView: View {
     @State private var undoToastClip: Clip?
     @State private var toastTask: Task<Void, Never>?
     @State private var multiPasteSeparator = "\n"
+    @StateObject private var ai = AIActionController()
     @FocusState private var searchFocused: Bool
 
     var displayedClips: [Clip] {
@@ -44,9 +45,17 @@ struct PanelView: View {
             .background(.regularMaterial)
 
             if let clip = undoToastClip { undoToast(for: clip).transition(.move(edge: .bottom).combined(with: .opacity)) }
+
+            if ai.isActive {
+                AIActionOverlay(controller: ai) { text in
+                    PanelController.shared.closeAndPasteText(text)
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
         .animation(.easeInOut(duration: 0.18), value: showDetailFor?.id)
         .animation(.easeInOut(duration: 0.18), value: undoToastClip?.id)
+        .animation(.easeInOut(duration: 0.18), value: ai.phase)
         .onKeyPress(keys: [.escape]) { _ in handleEscape() }
         .onKeyPress(keys: [.upArrow]) { _ in moveSelection(by: -1) }
         .onKeyPress(keys: [.downArrow]) { _ in moveSelection(by: 1) }
@@ -129,6 +138,40 @@ struct PanelView: View {
             } else { selectedIds.removeAll(); selectedId = clip.id }
         }
         .gesture(TapGesture(count: 2).onEnded { PanelController.shared.closeAndPaste(clip) })
+        .contextMenu { clipContextMenu(clip) }
+    }
+
+    @ViewBuilder
+    private func clipContextMenu(_ clip: Clip) -> some View {
+        Button("Paste") { PanelController.shared.closeAndPaste(clip) }
+        Button("Paste as Plain Text") { PanelController.shared.closeAndPaste(clip, asPlainText: true) }
+        Button(clip.isPinned ? "Unpin" : "Pin") { Task { await ClipStore.shared.togglePin(clip) } }
+        if canRunAI(clip) {
+            Divider()
+            Menu("Transform with AI") {
+                ForEach(AIAction.allCases, id: \.self) { action in
+                    Button(action.rawValue) { ai.run(action, on: clip) }
+                }
+            }
+        }
+        Divider()
+        Button("Delete", role: .destructive) { contextDelete(clip) }
+    }
+
+    private func canRunAI(_ clip: Clip) -> Bool {
+        guard TroveSettings.aiEnabled else { return false }
+        switch clip.content {
+        case .text, .richText: return clip.content.previewText?.isEmpty == false
+        default: return false
+        }
+    }
+
+    private func contextDelete(_ clip: Clip) {
+        selectedId = clip.id
+        _ = store.softDelete(clip)
+        undoToastClip = clip
+        toastTask?.cancel()
+        toastTask = Task { try? await Task.sleep(for: .seconds(5)); guard !Task.isCancelled else { return }; undoToastClip = nil }
     }
 
     private var multiPasteBar: some View {
@@ -161,6 +204,7 @@ struct PanelView: View {
 
     @discardableResult
     private func handleEscape() -> KeyPress.Result {
+        if ai.isActive { ai.dismiss(); return .handled }
         if showDetailFor != nil { showDetailFor = nil; return .handled }
         if !searchText.isEmpty { searchText = ""; return .handled }
         PanelController.shared.close(); return .handled

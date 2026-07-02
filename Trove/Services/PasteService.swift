@@ -26,6 +26,17 @@ struct PasteService {
         // If not trusted, content is already on the clipboard — user presses ⌘V
     }
 
+    /// Put arbitrary text on the clipboard and paste it (used for AI output,
+    /// which has no backing Clip). Mirrors `paste(_:)`'s Accessibility guard.
+    static func pasteText(_ text: String) {
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(text, forType: .string)
+        if AXIsProcessTrusted() {
+            simulatePaste()
+        }
+    }
+
     static func simulatePaste() {
         let src = CGEventSource(stateID: .hidSystemState)
         let down = CGEvent(keyboardEventSource: src, virtualKey: 0x09, keyDown: true)
