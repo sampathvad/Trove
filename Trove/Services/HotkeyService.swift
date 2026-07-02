@@ -55,7 +55,7 @@ final class HotkeyService {
             hotKeyRefs[id] = ref
             _hotkeyHandlers[uid] = handler
         } else {
-            print("HotkeyService: RegisterEventHotKey failed with status \(status)")
+            Log.hotkeys.error("RegisterEventHotKey failed with status \(status, privacy: .public)")
         }
     }
 
