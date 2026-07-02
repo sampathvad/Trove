@@ -53,6 +53,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         observeAccessibilityChanges()
         showFirstRunIfNeeded()
 
+        // Boot Sparkle so its background update scheduler starts running.
+        _ = UpdateService.shared
+
         // Defer everything that touches TCC / system services off the launch
         // run-loop tick so the menu bar icon appears immediately.
         Task { @MainActor in

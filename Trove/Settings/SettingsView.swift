@@ -93,6 +93,8 @@ struct GeneralSettingsView: View {
     @State private var launchAtLogin = TroveSettings.launchAtLogin
     @State private var retentionDays = TroveSettings.historyRetentionDays
     @State private var maxHistory = TroveSettings.maxHistoryCount
+    @ObservedObject private var updater = UpdateService.shared
+    @State private var autoUpdate = UpdateService.shared.automaticallyChecksForUpdates
 
     var body: some View {
         Form {
@@ -102,6 +104,18 @@ struct GeneralSettingsView: View {
                         TroveSettings.launchAtLogin = v
                         try? v ? SMAppService.mainApp.register() : SMAppService.mainApp.unregister()
                     }
+            }
+            Section("Updates") {
+                Toggle("Automatically check for updates", isOn: $autoUpdate)
+                    .onChange(of: autoUpdate) { _, v in updater.automaticallyChecksForUpdates = v }
+                HStack {
+                    Button("Check Now") { updater.checkForUpdates() }
+                        .disabled(!updater.canCheckForUpdates)
+                    Spacer()
+                    Text("Version \(Bundle.appVersion)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             Section("History") {
                 Picker("Keep clips for", selection: $retentionDays) {

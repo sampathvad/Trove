@@ -32,5 +32,19 @@
 	<false/>
 	<key>NSSupportsSuddenTermination</key>
 	<false/>
+	<!-- Sparkle auto-update. See RELEASING.md. -->
+	<!-- Appcast published as a GitHub release asset. -->
+	<key>SUFeedURL</key>
+	<string>https://github.com/sampathvad/Trove/releases/latest/download/appcast.xml</string>
+	<!-- EdDSA public key that authenticates updates. PLACEHOLDER — replace with
+	     the key printed by Sparkle's `generate_keys` before shipping notarized
+	     builds; until then Sparkle will refuse to install updates. -->
+	<key>SUPublicEDKey</key>
+	<string>REPLACE_WITH_SPARKLE_ED_PUBLIC_KEY</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<!-- Check daily (seconds). -->
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
 </dict>
 </plist>
