@@ -26,19 +26,6 @@ targets:
         INFOPLIST_FILE: Trove/Resources/Info.plist
         CODE_SIGN_ENTITLEMENTS: Trove/Resources/Trove.entitlements
         PRODUCT_NAME: Trove
-    dependencies:
-      - package: GRDB
-      - package: KeyboardShortcuts
-      - package: Defaults
-      - package: Sparkle
-
-  TroveKit:
-    type: framework
-    platform: macOS
-    sources:
-      - path: TroveKit
-    dependencies:
-      - package: GRDB
 
   TroveTests:
     type: bundle.unit-test
@@ -55,20 +42,6 @@ targets:
       - path: TroveUITests
     dependencies:
       - target: Trove
-
-packages:
-  GRDB:
-    url: https://github.com/groue/GRDB.swift.git
-    from: "6.0.0"
-  KeyboardShortcuts:
-    url: https://github.com/sindresorhus/KeyboardShortcuts.git
-    from: "2.0.0"
-  Defaults:
-    url: https://github.com/sindresorhus/Defaults.git
-    from: "8.0.0"
-  Sparkle:
-    url: https://github.com/sparkle-project/Sparkle.git
-    from: "2.0.0"
 
 schemes:
   Trove:
