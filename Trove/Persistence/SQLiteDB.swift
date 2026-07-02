@@ -68,6 +68,10 @@ final class SQLiteDB {
 
     // MARK: - Helpers
 
+    // SQLITE_TRANSIENT (-1) tells SQLite to copy the bound bytes immediately,
+    // so we never hand it a pointer that outlives the value it points into.
+    private static let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+
     private func bind(_ args: [SQLValue], to stmt: OpaquePointer?) {
         for (i, arg) in args.enumerated() {
             let idx = Int32(i + 1)
@@ -79,12 +83,17 @@ final class SQLiteDB {
             case .real(let v):
                 sqlite3_bind_double(stmt, idx, v)
             case .text(let v):
-                sqlite3_bind_text(stmt, idx, (v as NSString).utf8String, -1, nil)
+                // Bind the String's own UTF-8 buffer with SQLITE_TRANSIENT so
+                // SQLite copies it before the pointer goes away. Using
+                // `(v as NSString).utf8String` with SQLITE_STATIC (nil) was a
+                // use-after-free: the bridged NSString is released once bind()
+                // returns, but SQLite dereferences the pointer later at step().
+                _ = v.utf8CString.withUnsafeBufferPointer { ptr in
+                    sqlite3_bind_text(stmt, idx, ptr.baseAddress, -1, Self.transient)
+                }
             case .blob(let v):
-                // SQLITE_TRANSIENT (-1) tells SQLite to copy the data immediately
-                let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
                 _ = v.withUnsafeBytes { ptr in
-                    sqlite3_bind_blob(stmt, idx, ptr.baseAddress, Int32(v.count), transient)
+                    sqlite3_bind_blob(stmt, idx, ptr.baseAddress, Int32(v.count), Self.transient)
                 }
             }
         }
