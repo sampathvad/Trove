@@ -7,6 +7,9 @@ struct ClipRow: View {
     var isSelected: Bool = false
     var isMultiSelected: Bool = false
     var searchText: String = ""
+    /// Optional hook to run an AI action on this clip. When set (and the clip
+    /// is eligible), the context menu shows a "Transform with AI" submenu.
+    var onRunAI: ((AIAction) -> Void)?
     @State private var isHovered = false
 
     var body: some View {
@@ -161,9 +164,28 @@ struct ClipRow: View {
             Button("Copy as Base64") { copyBase64() }
         }
 
+        if let onRunAI, canRunAI {
+            Divider()
+            Menu("Transform with AI") {
+                ForEach(AIAction.allCases, id: \.self) { action in
+                    Button(action.rawValue) { onRunAI(action) }
+                }
+            }
+        }
+
         Divider()
         Button("Delete", role: .destructive) {
             Task { @MainActor in _ = ClipStore.shared.softDelete(clip) }
+        }
+    }
+
+    /// AI actions only apply to text-bearing clips, and only when the user has
+    /// enabled AI in Settings.
+    private var canRunAI: Bool {
+        guard TroveSettings.aiEnabled else { return false }
+        switch clip.content {
+        case .text, .richText: return clip.content.previewText?.isEmpty == false
+        default: return false
         }
     }
 
