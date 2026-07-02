@@ -12,6 +12,7 @@ struct PanelView: View {
     @State private var undoToastClip: Clip?
     @State private var toastTask: Task<Void, Never>?
     @State private var multiPasteSeparator = "\n"
+    @StateObject private var ai = AIActionController()
     @FocusState private var searchFocused: Bool
 
     var displayedClips: [Clip] {
@@ -44,9 +45,17 @@ struct PanelView: View {
             .background(.regularMaterial)
 
             if let clip = undoToastClip { undoToast(for: clip).transition(.move(edge: .bottom).combined(with: .opacity)) }
+
+            if ai.isActive {
+                AIActionOverlay(controller: ai) { text in
+                    PanelController.shared.closeAndPasteText(text)
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
         .animation(.easeInOut(duration: 0.18), value: showDetailFor?.id)
         .animation(.easeInOut(duration: 0.18), value: undoToastClip?.id)
+        .animation(.easeInOut(duration: 0.18), value: ai.phase)
         .onKeyPress(keys: [.escape]) { _ in handleEscape() }
         .onKeyPress(keys: [.upArrow]) { _ in moveSelection(by: -1) }
         .onKeyPress(keys: [.downArrow]) { _ in moveSelection(by: 1) }
@@ -120,8 +129,13 @@ struct PanelView: View {
     }
 
     private func clipRow(_ clip: Clip) -> some View {
+        // ClipRow owns the context menu (Paste / Pin / smart actions / Delete);
+        // we just hand it a hook so the "Transform with AI" submenu can reach
+        // this view's AIActionController.
         ClipRow(clip: clip, index: displayedClips.firstIndex(of: clip).map { $0 + 1 },
-                isSelected: selectedId == clip.id, isMultiSelected: selectedIds.contains(clip.id), searchText: searchText)
+                isSelected: selectedId == clip.id, isMultiSelected: selectedIds.contains(clip.id),
+                searchText: searchText,
+                onRunAI: { action in ai.run(action, on: clip) })
         .id(clip.id)
         .onTapGesture {
             if NSEvent.modifierFlags.contains(.command) {
@@ -161,6 +175,7 @@ struct PanelView: View {
 
     @discardableResult
     private func handleEscape() -> KeyPress.Result {
+        if ai.isActive { ai.dismiss(); return .handled }
         if showDetailFor != nil { showDetailFor = nil; return .handled }
         if !searchText.isEmpty { searchText = ""; return .handled }
         PanelController.shared.close(); return .handled

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0FC1A02A6AAEE60E7151614F /* AIActionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB63328DE740C1C7769676BE /* AIActionController.swift */; };
 		27621A561EA828ADA3DDFBE9 /* DetailPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C3D25576931B58C339DED75 /* DetailPreviewView.swift */; };
 		27AC725EBF38AFDF6DF71D65 /* Clip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A55577669334BFBE3B38DDE /* Clip.swift */; };
 		2F23B663BF6E2F0CAFD30DBC /* ClipDedupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F9D96AADF5BA638F04ABF3 /* ClipDedupTests.swift */; };
@@ -33,6 +34,7 @@
 		9B7BF1E4A41C39BED7D3FB75 /* ShellFilterRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08FC1DDF62B002A5EC4F9BC5 /* ShellFilterRunner.swift */; };
 		9C40B335B81D4E9C57DC1668 /* ClipStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9790B30A51941B0704F52259 /* ClipStore.swift */; };
 		9EAAA13F17F939968D1A052E /* CollectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 420565FF446079AC70F8A9C4 /* CollectionStore.swift */; };
+		A7650B530E553EDF60F782F3 /* AIActionControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56BEBE7D459068773B2DDB42 /* AIActionControllerTests.swift */; };
 		AABFF14F4A12D4CE8706E061 /* HotkeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 969AA7CA3B453A093A299367 /* HotkeyService.swift */; };
 		AE034358EC96A6309305BA39 /* InstallLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C81C6F416A3B64A0045A4F4 /* InstallLocation.swift */; };
 		C360113372939A335E6F7862 /* NSColor+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4125DCC779EE5428CDC04F9 /* NSColor+Hex.swift */; };
@@ -46,6 +48,7 @@
 		D331F87A6F509D002B449D37 /* SensitiveContentDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475DC6CFDD820031EE49B210 /* SensitiveContentDetector.swift */; };
 		D3A36CFF3D9C2A234C9AB843 /* TypeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16B5D113E60198D910055888 /* TypeDetector.swift */; };
 		DAE56333999EB2883B25D1B7 /* TroveSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 445C9233E04C3A889A75433E /* TroveSettings.swift */; };
+		EAD4C50846071E12AEF4D739 /* AIActionOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 097C24F531D0A0A37DC3D74A /* AIActionOverlay.swift */; };
 		F234F2DD86DBBA6A64E8B68D /* SnippetExpander.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB9D783873D45DB49A9D74AD /* SnippetExpander.swift */; };
 		F65F23DE19D358F5A5A2E1A2 /* TroveApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38C3BA592C3314328698738F /* TroveApp.swift */; };
 		F73AE7748D8F3D2FCA41EF8F /* Filter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504B93C48052A1AA99A0433F /* Filter.swift */; };
@@ -74,6 +77,7 @@
 
 /* Begin PBXFileReference section */
 		08FC1DDF62B002A5EC4F9BC5 /* ShellFilterRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellFilterRunner.swift; sourceTree = "<group>"; };
+		097C24F531D0A0A37DC3D74A /* AIActionOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIActionOverlay.swift; sourceTree = "<group>"; };
 		0B6C85FF8BB36CA5447BC408 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0BDE7FA006C615DD2909FAD6 /* AIProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProviderTests.swift; sourceTree = "<group>"; };
 		13DF9E7D96367B3C4D2F789C /* SyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncService.swift; sourceTree = "<group>"; };
@@ -89,6 +93,7 @@
 		475DC6CFDD820031EE49B210 /* SensitiveContentDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveContentDetector.swift; sourceTree = "<group>"; };
 		500A9905BB0D7B40F538DA54 /* TroveLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = TroveLogo.png; sourceTree = "<group>"; };
 		504B93C48052A1AA99A0433F /* Filter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Filter.swift; sourceTree = "<group>"; };
+		56BEBE7D459068773B2DDB42 /* AIActionControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIActionControllerTests.swift; sourceTree = "<group>"; };
 		5A0F16DCE29AE245445C8BF4 /* SensitiveContentDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensitiveContentDetectorTests.swift; sourceTree = "<group>"; };
 		5A55577669334BFBE3B38DDE /* Clip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clip.swift; sourceTree = "<group>"; };
 		5A8BCA43BAA7E7305F28C99A /* TroveUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TroveUITests.swift; sourceTree = "<group>"; };
@@ -123,6 +128,7 @@
 		E349FC48FD6F960F42570CC3 /* AIActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIActionTests.swift; sourceTree = "<group>"; };
 		E4125DCC779EE5428CDC04F9 /* NSColor+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSColor+Hex.swift"; sourceTree = "<group>"; };
 		EC413624EC97F29EE8896C61 /* SQLiteDBTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteDBTests.swift; sourceTree = "<group>"; };
+		FB63328DE740C1C7769676BE /* AIActionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIActionController.swift; sourceTree = "<group>"; };
 		FE5AA77DEF2DFB4CFDD7D134 /* FilterEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterEngine.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -163,6 +169,7 @@
 		27824090DEB92AC8791D84A9 /* TroveTests */ = {
 			isa = PBXGroup;
 			children = (
+				56BEBE7D459068773B2DDB42 /* AIActionControllerTests.swift */,
 				E349FC48FD6F960F42570CC3 /* AIActionTests.swift */,
 				0BDE7FA006C615DD2909FAD6 /* AIProviderTests.swift */,
 				A3F9D96AADF5BA638F04ABF3 /* ClipDedupTests.swift */,
@@ -273,6 +280,7 @@
 		D80BA0C91C5D313EA72F69C9 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				FB63328DE740C1C7769676BE /* AIActionController.swift */,
 				C53A1393F3CF43051C80017F /* AIService.swift */,
 				875438C21930A0CE73D4D568 /* BlacklistService.swift */,
 				FE5AA77DEF2DFB4CFDD7D134 /* FilterEngine.swift */,
@@ -288,6 +296,7 @@
 		D9652A6C23C674370F344F96 /* Panel */ = {
 			isa = PBXGroup;
 			children = (
+				097C24F531D0A0A37DC3D74A /* AIActionOverlay.swift */,
 				DD65C5067D6B27431707A055 /* ClipRow.swift */,
 				7C3D25576931B58C339DED75 /* DetailPreviewView.swift */,
 				99A52CF9C64E5831FEF6E0BD /* PanelView.swift */,
@@ -414,6 +423,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A7650B530E553EDF60F782F3 /* AIActionControllerTests.swift in Sources */,
 				C92DF88F016F02CA173BAB85 /* AIActionTests.swift in Sources */,
 				52FAD8E3FF4707A838685E06 /* AIProviderTests.swift in Sources */,
 				2F23B663BF6E2F0CAFD30DBC /* ClipDedupTests.swift in Sources */,
@@ -430,6 +440,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0FC1A02A6AAEE60E7151614F /* AIActionController.swift in Sources */,
+				EAD4C50846071E12AEF4D739 /* AIActionOverlay.swift in Sources */,
 				2F647BE308A2CFDB8F49C582 /* AIService.swift in Sources */,
 				D119C776892B27AEEEEE373F /* AboutView.swift in Sources */,
 				886EC2840A96994D470EC4EB /* AuditLog.swift in Sources */,

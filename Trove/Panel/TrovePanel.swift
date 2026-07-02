@@ -76,6 +76,14 @@ final class PanelController {
         }
     }
 
+    // Close panel then paste raw text (e.g. AI-transformed output).
+    func closeAndPasteText(_ text: String) {
+        close()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            PasteService.pasteText(text)
+        }
+    }
+
     private func startMouseMonitor() {
         stopMouseMonitor()
         mouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
