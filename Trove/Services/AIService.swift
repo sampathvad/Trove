@@ -78,7 +78,8 @@ struct OpenAIProvider: AIProvider {
         req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (data, _) = try await session.data(for: req)
+        let (data, response) = try await session.data(for: req)
+        try AIHTTP.ensureSuccess(response, data: data, provider: name)
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         guard let text = (json?["choices"] as? [[String: Any]])?.first?["message"] as? [String: Any],
               let content = text["content"] as? String else {
@@ -116,7 +117,8 @@ struct AnthropicProvider: AIProvider {
         req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (data, _) = try await session.data(for: req)
+        let (data, response) = try await session.data(for: req)
+        try AIHTTP.ensureSuccess(response, data: data, provider: name)
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         guard let arr = json?["content"] as? [[String: Any]],
               let text = arr.first?["text"] as? String else {
@@ -146,10 +148,11 @@ struct OllamaProvider: AIProvider {
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (data, _) = try await session.data(for: req)
+        let (data, response) = try await session.data(for: req)
+        try AIHTTP.ensureSuccess(response, data: data, provider: name)
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-        guard let response = json?["response"] as? String else { throw AIError.invalidResponse }
-        return response.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let text = json?["response"] as? String else { throw AIError.invalidResponse }
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 
@@ -158,12 +161,54 @@ struct OllamaProvider: AIProvider {
 enum AIError: LocalizedError {
     case missingAPIKey(String)
     case invalidResponse
+    case httpError(provider: String, status: Int, message: String?)
 
     var errorDescription: String? {
         switch self {
         case .missingAPIKey(let p): return "No API key found for \(p). Add it in Settings → AI."
         case .invalidResponse: return "Unexpected response from AI provider."
+        case .httpError(let provider, let status, let message):
+            let base: String
+            switch status {
+            case 401, 403:
+                base = "\(provider) rejected the API key (HTTP \(status)). Check it in Settings → AI."
+            case 429:
+                base = "\(provider) rate limit reached (HTTP \(status)). Try again shortly."
+            case 500..<600:
+                base = "\(provider) had a server error (HTTP \(status)). Try again later."
+            default:
+                base = "\(provider) request failed (HTTP \(status))."
+            }
+            if let message, !message.isEmpty { return "\(base) \(message)" }
+            return base
         }
+    }
+}
+
+// MARK: - HTTP status handling
+
+enum AIHTTP {
+    /// Throws `AIError.httpError` for any non-2xx response, pulling a human
+    /// message out of the provider's error body when one is present. A
+    /// non-HTTP response (e.g. a stub) is treated as success.
+    static func ensureSuccess(_ response: URLResponse, data: Data, provider: String) throws {
+        guard let http = response as? HTTPURLResponse else { return }
+        guard !(200..<300).contains(http.statusCode) else { return }
+        throw AIError.httpError(provider: provider, status: http.statusCode,
+                                message: errorMessage(from: data))
+    }
+
+    /// Best-effort extraction of an error string across provider shapes:
+    /// OpenAI/Anthropic `{"error": {"message": …}}`, Ollama `{"error": "…"}`,
+    /// or a top-level `{"message": …}`.
+    private static func errorMessage(from data: Data) -> String? {
+        guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        if let err = obj["error"] as? [String: Any], let message = err["message"] as? String {
+            return message
+        }
+        if let message = obj["error"] as? String { return message }
+        if let message = obj["message"] as? String { return message }
+        return nil
     }
 }
 
