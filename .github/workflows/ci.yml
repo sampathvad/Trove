@@ -50,9 +50,67 @@ jobs:
     needs: [test]
     permissions:
       contents: write
+    # `secrets` can't be used in step `if:` conditions, so hoist the check into
+    # a job-level env var (job env may reference secrets) and gate steps on it.
+    env:
+      SIGN: ${{ secrets.MACOS_CERTIFICATE != '' }}
     steps:
       - uses: actions/checkout@v6.0.2
+
+      # ---- Signed + notarized path (runs only when signing secrets exist) ----
+      - name: Import Developer ID certificate
+        if: ${{ env.SIGN == 'true' }}
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$RUNNER_TEMP/cert.p12" -P "$MACOS_CERTIFICATE_PWD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH" login.keychain-db
+          rm -f "$RUNNER_TEMP/cert.p12"
+
+      - name: Build, sign & export (Developer ID)
+        if: ${{ env.SIGN == 'true' }}
+        env:
+          DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+        run: |
+          xcodebuild archive \
+            -scheme Trove \
+            -archivePath build/Trove.xcarchive \
+            -destination 'generic/platform=macOS' \
+            DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            OTHER_CODE_SIGN_FLAGS="--timestamp"
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>developer-id</string>
+            <key>teamID</key><string>${DEVELOPMENT_TEAM}</string>
+            <key>signingStyle</key><string>manual</string>
+          </dict></plist>
+          PLIST
+          # -exportArchive re-signs the app AND its nested code (the Sparkle
+          # framework + its XPC services) inside-out, which manual codesign
+          # cannot do reliably.
+          xcodebuild -exportArchive \
+            -archivePath build/Trove.xcarchive \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath build/export
+          cp -R "build/export/Trove.app" "build/Trove.app"
+
+      # ---- Unsigned fallback (no secrets: keeps forks / dry-runs working) ----
       - name: Build archive (unsigned)
+        if: ${{ env.SIGN == 'false' }}
         run: |
           xcodebuild archive \
             -scheme Trove \
@@ -61,15 +119,30 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
-      - name: Extract .app from archive
-        run: |
           cp -R "build/Trove.xcarchive/Products/Applications/Trove.app" "build/Trove.app"
+
       - name: Create DMG
         run: |
           hdiutil create -volname Trove \
             -srcfolder build/Trove.app \
             -ov -format UDZO \
             build/Trove.dmg
+      - name: Notarize & staple DMG
+        if: ${{ env.SIGN == 'true' }}
+        env:
+          NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+          NOTARY_TEAM_ID: ${{ secrets.NOTARY_TEAM_ID }}
+        run: |
+          # Submit the DMG (which embeds the signed app) and block until Apple
+          # returns a verdict, then staple the ticket so Gatekeeper validates
+          # offline.
+          xcrun notarytool submit build/Trove.dmg \
+            --apple-id "$NOTARY_APPLE_ID" \
+            --password "$NOTARY_PASSWORD" \
+            --team-id "$NOTARY_TEAM_ID" \
+            --wait
+          xcrun stapler staple build/Trove.dmg
       - name: Generate & sign Sparkle appcast
         env:
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
